@@ -13,12 +13,14 @@ namespace EdApp.AutoFill.DAL.Repository
             AutoFillContext autoFillContext,
             IBaseRepository<ModelType> modelType,
             IBaseRepository<CalculationType> calculationType,
-            IBaseRepository<Parameter> parameter)
+            IBaseRepository<Parameter> parameter, IBaseRepository<AttributeDto> attribute, IBaseRepository<AttributesForSimocalc> attributesForSimocalc, IBaseRepository<AttributeDto> attributeDto)
         {
             AutoFillContext = autoFillContext;
             ModelType = modelType;
             CalculationType = calculationType;
             Parameter = parameter;
+            AttributesForSimocalc = attributesForSimocalc;
+            AttributeDto = attributeDto;
         }
 
         public IBaseRepository<ModelType> ModelType { get; }
@@ -26,6 +28,10 @@ namespace EdApp.AutoFill.DAL.Repository
         public IBaseRepository<CalculationType> CalculationType { get; }
 
         public IBaseRepository<Parameter> Parameter { get; }
+
+        public IBaseRepository<AttributeDto> AttributeDto { get; }
+
+        public IBaseRepository<AttributesForSimocalc> AttributesForSimocalc { get; }
 
         /// <summary>
         /// Release managed resources.

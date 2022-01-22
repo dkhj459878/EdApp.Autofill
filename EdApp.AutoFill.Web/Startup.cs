@@ -32,7 +32,7 @@ namespace EdApp.AutoFill.Web
             // Database registration.
             services.AddDbContext<AutoFillContext>(
                 options => options.UseJetOleDb("name=ConnectionStrings:AutoFillDb")
-                    .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll));
+                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

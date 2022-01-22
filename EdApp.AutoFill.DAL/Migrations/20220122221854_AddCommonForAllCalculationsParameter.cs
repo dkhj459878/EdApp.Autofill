@@ -2,7 +2,7 @@
 
 namespace EdApp.AutoFill.DAL.Migrations
 {
-    public partial class InitialMigration : Migration
+    public partial class AddCommonForAllCalculationsParameter : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

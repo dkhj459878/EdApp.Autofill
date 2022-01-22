@@ -58,6 +58,11 @@ namespace EdApp.AutoFill.BL.Model
         public string Unit { get; set; }
 
         /// <summary>
+        /// Parameters for all calculation modules
+        /// </summary>
+        public string ParametersForAllCalculationModules { get; set; }
+
+        /// <summary>
         ///     Data type name. For example: int, string, bool, and etc.
         /// </summary>
         public string DataType { get; set; }

@@ -18,6 +18,16 @@ namespace EdApp.AutoFill.DAL.Contract.Repository
         /// <summary>
         /// Represent a repository for a parameter support.
         /// </summary>
+        IBaseRepository<AttributeDto> AttributeDto { get; }
+
+        /// <summary>
+        /// Represent a repository for attributes for Simocalc support.
+        /// </summary>
+        IBaseRepository<AttributesForSimocalc> AttributesForSimocalc { get; }
+
+        /// <summary>
+        /// Represent a repository for a parameter support.
+        /// </summary>
         IBaseRepository<Parameter> Parameter { get; }
 
         /// <summary>

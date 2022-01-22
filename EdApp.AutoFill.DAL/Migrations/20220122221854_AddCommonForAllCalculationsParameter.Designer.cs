@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EdApp.AutoFill.DAL.Migrations
 {
     [DbContext(typeof(AutoFillContext))]
-    [Migration("20220122214442_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20220122221854_AddCommonForAllCalculationsParameter")]
+    partial class AddCommonForAllCalculationsParameter
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
