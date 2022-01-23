@@ -57,6 +57,11 @@
             return 17;
         }
 
+        public static int ParametersForAllCalculationModules()
+        {
+            return 18;
+        }
+
         public static int MandatoryParameter()
         {
             return 21;

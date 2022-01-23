@@ -193,96 +193,38 @@ namespace EdApp.AutoFill.BL.Service
 
         private ParameterDto GenerateFlatRequestParameter(Worksheet worksheet, int rowIndex)
         {
-            if (!IsNoFlatRequestData(worksheet, rowIndex))
-                return new ParameterDto
-                {
-                    Name = GetFlatRequest(worksheet, rowIndex),
-                    ModelType = _request,
-                    CalculationType = _windingDesignFlatWire,
-                    MandatoryParameter = GetMandatoryParameter(worksheet, rowIndex),
-                    MandatoryValue = GetMandatoryValue(worksheet, rowIndex),
-                    VariableName = GetVariableName(worksheet, rowIndex),
-                    DescriptionEn = GetDescriptionEn(worksheet, rowIndex),
-                    Unit = GetUnit(worksheet, rowIndex),
-                    DataType = GetDataType(worksheet, rowIndex),
-                    Field = GetField(worksheet, rowIndex),
-                    RelevantForHash = GetRelevantForHash(worksheet, rowIndex),
-                    UIName = GetUIName(worksheet, rowIndex)
-                };
-            return null;
+            return GenerateParameters(IsNoFlatRequestData, GetFlatRequest, _request, _windingDesignFlatWire, worksheet,
+                rowIndex);
         }
 
         private ParameterDto GenerateFlatResponseParameter(Worksheet worksheet, int rowIndex)
         {
-            if (!IsNoFlatResponseData(worksheet, rowIndex))
-                return new ParameterDto
-                {
-                    Name = GetFlatResponse(worksheet, rowIndex),
-                    ModelType = _response,
-                    CalculationType = _windingDesignFlatWire,
-                    MandatoryParameter = GetMandatoryParameter(worksheet, rowIndex),
-                    MandatoryValue = GetMandatoryValue(worksheet, rowIndex),
-                    VariableName = GetVariableName(worksheet, rowIndex),
-                    DescriptionEn = GetDescriptionEn(worksheet, rowIndex),
-                    Unit = GetUnit(worksheet, rowIndex),
-                    DataType = GetDataType(worksheet, rowIndex),
-                    Field = GetField(worksheet, rowIndex),
-                    RelevantForHash = GetRelevantForHash(worksheet, rowIndex),
-                    UIName = GetUIName(worksheet, rowIndex)
-                };
-            return null;
+            return GenerateParameters(IsNoFlatResponseData, GetFlatResponse, _response, _windingDesignFlatWire, worksheet,
+                rowIndex);
         }
 
         private ParameterDto GenerateRoundRequestParameter(Worksheet worksheet, int rowIndex)
         {
-            if (!IsNoRoundRequestData(worksheet, rowIndex))
-                return new ParameterDto
-                {
-                    Name = GetRoundRequest(worksheet, rowIndex),
-                    ModelType = _request,
-                    CalculationType = _windingDesignRoundWire,
-                    MandatoryParameter = GetMandatoryParameter(worksheet, rowIndex),
-                    MandatoryValue = GetMandatoryValue(worksheet, rowIndex),
-                    VariableName = GetVariableName(worksheet, rowIndex),
-                    DescriptionEn = GetDescriptionEn(worksheet, rowIndex),
-                    Unit = GetUnit(worksheet, rowIndex),
-                    DataType = GetDataType(worksheet, rowIndex),
-                    Field = GetField(worksheet, rowIndex),
-                    RelevantForHash = GetRelevantForHash(worksheet, rowIndex),
-                    UIName = GetUIName(worksheet, rowIndex)
-                };
-            return null;
+            return GenerateParameters(IsNoRoundRequestData, GetRoundRequest, _request, _windingDesignRoundWire, worksheet,
+                rowIndex);
         }
 
         private ParameterDto GenerateRoundResponseParameter(Worksheet worksheet, int rowIndex)
         {
-            if (!IsNoRoundResponseData(worksheet, rowIndex))
-                return new ParameterDto
-                {
-                    Name = GetRoundResponse(worksheet, rowIndex),
-                    ModelType = _response,
-                    CalculationType = _windingDesignRoundWire,
-                    MandatoryParameter = GetMandatoryParameter(worksheet, rowIndex),
-                    MandatoryValue = GetMandatoryValue(worksheet, rowIndex),
-                    VariableName = GetVariableName(worksheet, rowIndex),
-                    DescriptionEn = GetDescriptionEn(worksheet, rowIndex),
-                    Unit = GetUnit(worksheet, rowIndex),
-                    DataType = GetDataType(worksheet, rowIndex),
-                    Field = GetField(worksheet, rowIndex),
-                    RelevantForHash = GetRelevantForHash(worksheet, rowIndex),
-                    UIName = GetUIName(worksheet, rowIndex)
-                };
-            return null;
+            return GenerateParameters(IsNoRoundResponseData, GetRoundResponse, _response, _windingDesignRoundWire, worksheet,
+                rowIndex);
         }
 
-        private ParameterDto GenerateTorqueRequestParameter(Worksheet worksheet, int rowIndex)
+        private ParameterDto GenerateParameters(Func<Worksheet, int, bool> checkIfDataPresent,
+            Func<Worksheet, int, string> getKeyData, ModelTypeDto modelType,
+            CalculationTypeDto calculationType, Worksheet worksheet, int rowIndex)
         {
-            if (!IsNoTorqueRequestData(worksheet, rowIndex))
+            if (!checkIfDataPresent(worksheet, rowIndex))
                 return new ParameterDto
                 {
-                    Name = GetTorqueRequest(worksheet, rowIndex),
-                    ModelType = _request,
-                    CalculationType = _dynamicTorque,
+                    Name = getKeyData(worksheet, rowIndex),
+                    ModelType = modelType,
+                    CalculationType = calculationType,
                     MandatoryParameter = GetMandatoryParameter(worksheet, rowIndex),
                     MandatoryValue = GetMandatoryValue(worksheet, rowIndex),
                     VariableName = GetVariableName(worksheet, rowIndex),
@@ -298,23 +240,14 @@ namespace EdApp.AutoFill.BL.Service
 
         private ParameterDto GenerateTorqueResponseParameter(Worksheet worksheet, int rowIndex)
         {
-            if (!IsNoTorqueResponseData(worksheet, rowIndex))
-                return new ParameterDto
-                {
-                    Name = GetTorqueResponse(worksheet, rowIndex),
-                    ModelType = _response,
-                    CalculationType = _dynamicTorque,
-                    MandatoryParameter = GetMandatoryParameter(worksheet, rowIndex),
-                    MandatoryValue = GetMandatoryValue(worksheet, rowIndex),
-                    VariableName = GetVariableName(worksheet, rowIndex),
-                    DescriptionEn = GetDescriptionEn(worksheet, rowIndex),
-                    Unit = GetUnit(worksheet, rowIndex),
-                    DataType = GetDataType(worksheet, rowIndex),
-                    Field = GetField(worksheet, rowIndex),
-                    RelevantForHash = GetRelevantForHash(worksheet, rowIndex),
-                    UIName = GetUIName(worksheet, rowIndex)
-                };
-            return null;
+            return GenerateParameters(IsNoTorqueResponseData, GetTorqueResponse, _response, _dynamicTorque, worksheet,
+                rowIndex);
+        }
+
+        private ParameterDto GenerateTorqueRequestParameter(Worksheet worksheet, int rowIndex)
+        {
+            return GenerateParameters(IsNoTorqueRequestData, GetTorqueRequest, _response, _dynamicTorque, worksheet,
+                rowIndex);
         }
 
         #endregion
@@ -410,6 +343,12 @@ namespace EdApp.AutoFill.BL.Service
         private string GetVariableName(Worksheet worksheet, int rowIndex)
         {
             return (worksheet.Cells[rowIndex, ColumnIndexes.VariableName()] as Range).Value?.ToString().Trim() ??
+                   string.Empty;
+        }
+
+        private string GetVariableNameParametersForAllCalculationModules(Worksheet worksheet, int rowIndex)
+        {
+            return (worksheet.Cells[rowIndex, ColumnIndexes.V()] as Range).Value?.ToString().Trim() ??
                    string.Empty;
         }
 
