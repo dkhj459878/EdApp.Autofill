@@ -18,7 +18,7 @@ namespace EdApp.AutoFill.DAL.Contract.Repository
         /// <summary>
         /// Represent a repository for a parameter support.
         /// </summary>
-        IBaseRepository<AttributeDto> AttributeDto { get; }
+        IBaseRepository<Model.Attribute> AttributeDto { get; }
 
         /// <summary>
         /// Represent a repository for attributes for Simocalc support.

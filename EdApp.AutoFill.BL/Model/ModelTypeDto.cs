@@ -1,26 +1,26 @@
 ﻿using System.Collections.Generic;
 using EdApp.AutoFill.DAL.Contract;
 
-namespace EdApp.AutoFill.BL.Model
+namespace EdApp.AutoFill.DAL.Model
 {
     /// <summary>
-    ///     Contains model type, for example: Request or Response (or possibly Common).
+    /// Contains model type, for example: Request or Response (or possibly Common).
     /// </summary>
     public class ModelTypeDto : IIdentifier
     {
         /// <summary>
-        ///     Type name (Request, Response or Common).
+        /// Identifier.
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// Type name (Request, Response or Common).
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        ///     Related parameters.
+        /// Related parameters.
         /// </summary>
-        public ICollection<ParameterDto> Parameters { get; set; }
-
-        /// <summary>
-        ///     Identifier.
-        /// </summary>
-        public int Id { get; set; }
+        public ICollection<Parameter> Parameters { get; set; }
     }
 }

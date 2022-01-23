@@ -94,6 +94,11 @@ namespace EdApp.AutoFill.DAL.Model
         public string Field { get; set; }
 
         /// <summary>
+        /// Parameter common for all calculation modules.
+        /// </summary>
+        public string ParametersForAllCalculationModules { get; set; }
+
+        /// <summary>
         /// Shows if parameter value should be counted in the hash calculation.
         /// </summary>
         public bool RelevantForHash { get; set; }

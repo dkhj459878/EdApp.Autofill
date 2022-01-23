@@ -11,7 +11,7 @@ namespace EdApp.AutoFill.DAL
         {
         }
 
-        public DbSet<AttributeDto> Attribute { get; set; }
+        public DbSet<Attribute> Attribute { get; set; }
 
         public DbSet<AttributesForSimocalc> AttributesForSimocalc { get; set; }
 
@@ -23,7 +23,7 @@ namespace EdApp.AutoFill.DAL
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.JoinOneToMany<AttributesForSimocalc, AttributeDto>(
+            modelBuilder.JoinOneToMany<AttributesForSimocalc, Attribute>(
                 p => p.AttributesForSimocalc,
                 d => d.Attributes,
                 d => d.CalculationTypeId);
@@ -38,7 +38,7 @@ namespace EdApp.AutoFill.DAL
                 d => d.Parameters,
                 d => d.CalculationTypeId);
 
-            modelBuilder.JoinOneToMany<CalculationType, AttributeDto>(
+            modelBuilder.JoinOneToMany<CalculationType, Attribute>(
                 p => p.CalculationType,
                 d => d.Attributes,
                 d => d.CalculationTypeId);
@@ -49,15 +49,15 @@ namespace EdApp.AutoFill.DAL
                 d => d.ModelTypeId);
 
             // AttributeDto required constraints.
-            modelBuilder.Entity<AttributeDto>()
+            modelBuilder.Entity<Attribute>()
                 .Property(mt => mt.Name)
                 .IsRequired();
 
-            modelBuilder.Entity<AttributeDto>()
+            modelBuilder.Entity<Attribute>()
                 .Property(mt => mt.AttributesForSimocalcId)
                 .IsRequired();
 
-            modelBuilder.Entity<AttributeDto>()
+            modelBuilder.Entity<Attribute>()
                 .Property(mt => mt.CalculationTypeId)
                 .IsRequired();
 

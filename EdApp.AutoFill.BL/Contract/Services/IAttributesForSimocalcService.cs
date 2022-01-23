@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using EdApp.AutoFill.DAL.Model;
+using EdApp.AutoFill.BL.Model;
 
 namespace EdApp.AutoFill.BL.Contract.Services
 {
@@ -18,9 +18,9 @@ namespace EdApp.AutoFill.BL.Contract.Services
     /// <param name="orderBy">A lambda expression specifying the sorting of instances.</param>
     /// <param name="includeProperties">Comma-separated list of related properties of instances.</param>
     /// <returns>Attribute enumeration.</returns>
-    IEnumerable<AttributesForSimocalc> GetAllAttributesForSimocalcs(
-    Expression<Func<AttributesForSimocalc, bool>> filter = null,
-    Func<IQueryable<AttributesForSimocalc>, IOrderedQueryable<AttributesForSimocalc>> orderBy = null,
+    IEnumerable<AttributesForSimocalcDto> GetAllAttributesForSimocalcs(
+    Expression<Func<AttributesForSimocalcDto, bool>> filter = null,
+    Func<IQueryable<AttributesForSimocalcDto>, IOrderedQueryable<AttributesForSimocalcDto>> orderBy = null,
     string includeProperties = "");
 
     /// <summary>
@@ -32,11 +32,11 @@ namespace EdApp.AutoFill.BL.Contract.Services
     /// <param name="orderBy">A lambda expression specifying the sorting of instances.</param>
     /// <param name="includeProperties">Comma-separated list of related properties of instances.</param>
     /// <returns>Attribute instance.</returns>
-    IEnumerable<AttributesForSimocalc> GetAttributesForSimocalcsPage(
+    IEnumerable<AttributesForSimocalcDto> GetAttributesForSimocalcsPage(
     int pageSize,
     int pageNumber,
-    Expression<Func<AttributesForSimocalc, bool>> filter = null,
-    Func<IQueryable<AttributesForSimocalc>, IOrderedQueryable<AttributesForSimocalc>> orderBy = null,
+    Expression<Func<AttributesForSimocalcDto, bool>> filter = null,
+    Func<IQueryable<AttributesForSimocalcDto>, IOrderedQueryable<AttributesForSimocalcDto>> orderBy = null,
     string includeProperties = "");
 
     /// <summary>
@@ -44,7 +44,7 @@ namespace EdApp.AutoFill.BL.Contract.Services
     /// </summary>
     /// <param name="id">Attribute identifier.</param>
     /// <returns>Attribute instance.</returns>
-    AttributesForSimocalc GetAttributesForSimocalc(int id);
+    AttributesForSimocalcDto GetAttributesForSimocalc(int id);
 
     /// <summary>
     /// Adds an attributes for simocalc instance into the data store.
@@ -52,13 +52,13 @@ namespace EdApp.AutoFill.BL.Contract.Services
     /// </summary>
     /// <param name="attributesForSimocalc">Attribute instance.</param>
     /// <returns>Attribute identifier.</returns>
-    int AddAttributesForSimocalc(AttributesForSimocalc attributesForSimocalc);
+    int AddAttributesForSimocalc(AttributesForSimocalcDto attributesForSimocalc);
 
     /// <summary>
     /// Updates certain attributes for simocalc instance into the data store.
     /// </summary>
     /// <param name="attributesForSimocalc">Attribute instance.</param>
-    void UpdateAttributesForSimocalc(AttributesForSimocalc attributesForSimocalc);
+    void UpdateAttributesForSimocalc(AttributesForSimocalcDto attributesForSimocalc);
 
     /// <summary>
     /// Removes attributes for simocalc with specific identifier.
@@ -79,6 +79,6 @@ namespace EdApp.AutoFill.BL.Contract.Services
     /// </summary>
     /// <param name="filter">Lambda expression defining instance filtering.</param>
     /// <returns>Returns <see langword="true" />, if an attributes for simocalc exists.</returns>
-    bool AttributesForSimocalcExists(Expression<Func<AttributesForSimocalc, bool>> filter);
+    bool AttributesForSimocalcExists(Expression<Func<AttributesForSimocalcDto, bool>> filter);
     }
 }

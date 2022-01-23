@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using AutoMapper;
 using EdApp.AutoFill.BL.Contract.Services;
+using EdApp.AutoFill.BL.Model;
 using EdApp.AutoFill.DAL.Contract.Repository;
 using EdApp.AutoFill.DAL.Model;
 
@@ -20,48 +21,48 @@ namespace EdApp.AutoFill.BL.Service
             _mapper = mapper;
         }
 
-        public IEnumerable<AttributesForSimocalc> GetAllAttributesForSimocalcs(
-            Expression<Func<AttributesForSimocalc, bool>> filterDto = null,
-            Func<IQueryable<AttributesForSimocalc>, IOrderedQueryable<AttributesForSimocalc>> orderByDto = null,
+        public IEnumerable<AttributesForSimocalcDto> GetAllAttributesForSimocalcs(
+            Expression<Func<AttributesForSimocalcDto, bool>> filterDto = null,
+            Func<IQueryable<AttributesForSimocalcDto>, IOrderedQueryable<AttributesForSimocalcDto>> orderByDto = null,
             string includeProperties = "")
         {
             var filter =
-                _mapper.Map<Expression<Func<AttributesForSimocalc, bool>>, Expression<Func<AttributesForSimocalc, bool>>>(
+                _mapper.Map<Expression<Func<AttributesForSimocalcDto, bool>>, Expression<Func<AttributesForSimocalc, bool>>>(
                     filterDto);
             var orderBy =
                 _mapper
-                    .Map<Func<IQueryable<AttributesForSimocalc>, IOrderedQueryable<AttributesForSimocalc>>,
+                    .Map<Func<IQueryable<AttributesForSimocalcDto>, IOrderedQueryable<AttributesForSimocalcDto>>,
                         Func<IQueryable<AttributesForSimocalc>, IOrderedQueryable<AttributesForSimocalc>>>(orderByDto);
-            return _mapper.Map<IEnumerable<AttributesForSimocalc>, IEnumerable<AttributesForSimocalc>>(
+            return _mapper.Map<IEnumerable<AttributesForSimocalc>, IEnumerable<AttributesForSimocalcDto>>(
                 UnitOfWork.AttributesForSimocalc.Get(filter, orderBy, includeProperties));
         }
 
-        public IEnumerable<AttributesForSimocalc> GetAttributesForSimocalcsPage(
+        public IEnumerable<AttributesForSimocalcDto> GetAttributesForSimocalcsPage(
             int pageSize,
             int pageNumber,
-            Expression<Func<AttributesForSimocalc, bool>> filterDto = null,
-            Func<IQueryable<AttributesForSimocalc>, IOrderedQueryable<AttributesForSimocalc>> orderByDto = null,
+            Expression<Func<AttributesForSimocalcDto, bool>> filterDto = null,
+            Func<IQueryable<AttributesForSimocalcDto>, IOrderedQueryable<AttributesForSimocalcDto>> orderByDto = null,
             string includeProperties = "")
         {
             var filter =
-                _mapper.Map<Expression<Func<AttributesForSimocalc, bool>>, Expression<Func<AttributesForSimocalc, bool>>>(
+                _mapper.Map<Expression<Func<AttributesForSimocalcDto, bool>>, Expression<Func<AttributesForSimocalc, bool>>>(
                     filterDto);
             var orderBy =
                 _mapper
-                    .Map<Func<IQueryable<AttributesForSimocalc>, IOrderedQueryable<AttributesForSimocalc>>,
+                    .Map<Func<IQueryable<AttributesForSimocalcDto>, IOrderedQueryable<AttributesForSimocalcDto>>,
                         Func<IQueryable<AttributesForSimocalc>, IOrderedQueryable<AttributesForSimocalc>>>(orderByDto);
-            return _mapper.Map<IEnumerable<AttributesForSimocalc>, IEnumerable<AttributesForSimocalc>>(
+            return _mapper.Map<IEnumerable<AttributesForSimocalc>, IEnumerable<AttributesForSimocalcDto>>(
                 UnitOfWork.AttributesForSimocalc.GetPage(pageSize, pageNumber, filter, orderBy, includeProperties));
         }
 
-        public AttributesForSimocalc GetAttributesForSimocalc(int id)
+        public AttributesForSimocalcDto GetAttributesForSimocalc(int id)
         {
-            return _mapper.Map<AttributesForSimocalc, AttributesForSimocalc>(UnitOfWork.AttributesForSimocalc.GetById(id));
+            return _mapper.Map<AttributesForSimocalc, AttributesForSimocalcDto>(UnitOfWork.AttributesForSimocalc.GetById(id));
         }
 
-        public int AddAttributesForSimocalc(AttributesForSimocalc attributesForSimocalc)
+        public int AddAttributesForSimocalc(AttributesForSimocalcDto attributesForSimocalc)
         {
-            var attribute = _mapper.Map<AttributesForSimocalc, AttributesForSimocalc>(attributesForSimocalc);
+            var attribute = _mapper.Map<AttributesForSimocalcDto, AttributesForSimocalc>(attributesForSimocalc);
             UnitOfWork.AttributesForSimocalc.Insert(attribute);
             UnitOfWork.SaveChanges();
             // Detach added navigation entities as far as I have being got the error:
@@ -73,9 +74,9 @@ namespace EdApp.AutoFill.BL.Service
             return attribute.Id;
         }
 
-        public void UpdateAttributesForSimocalc(AttributesForSimocalc attributesForSimocalc)
+        public void UpdateAttributesForSimocalc(AttributesForSimocalcDto attributesForSimocalc)
         {
-            var attribute = _mapper.Map<AttributesForSimocalc, AttributesForSimocalc>(attributesForSimocalc);
+            var attribute = _mapper.Map<AttributesForSimocalcDto, AttributesForSimocalc>(attributesForSimocalc);
             UnitOfWork.AttributesForSimocalc.UpdateSimpleProperties(attribute, attribute.Id);
             UnitOfWork.SaveChanges();
         }
@@ -92,10 +93,10 @@ namespace EdApp.AutoFill.BL.Service
             UnitOfWork.SaveChanges();
         }
 
-        public bool AttributesForSimocalcExists(Expression<Func<AttributesForSimocalc, bool>> filterDto)
+        public bool AttributesForSimocalcExists(Expression<Func<AttributesForSimocalcDto, bool>> filterDto)
         {
             var filter =
-                _mapper.Map<Expression<Func<AttributesForSimocalc, bool>>, Expression<Func<AttributesForSimocalc, bool>>>(
+                _mapper.Map<Expression<Func<AttributesForSimocalcDto, bool>>, Expression<Func<AttributesForSimocalc, bool>>>(
                     filterDto);
             return UnitOfWork.AttributesForSimocalc.Get(filter)
                 .FirstOrDefault() != null;

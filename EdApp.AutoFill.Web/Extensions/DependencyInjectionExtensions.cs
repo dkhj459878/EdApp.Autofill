@@ -1,4 +1,5 @@
 ﻿using EdApp.AutoFill.BL.Contract.Services;
+using EdApp.AutoFill.BL.Model;
 using EdApp.AutoFill.BL.Service;
 using EdApp.AutoFill.DAL;
 using EdApp.AutoFill.DAL.Contract.Repository;
@@ -18,16 +19,17 @@ namespace EdApp.AutoFill.Web.Extensions
             services.AddScoped<IBaseRepository<CalculationType>, BaseRepository<CalculationType>>();
             services.AddScoped<IBaseRepository<ModelType>, BaseRepository<ModelType>>();
             services.AddScoped<IBaseRepository<Parameter>, BaseRepository<Parameter>>();
-            services.AddScoped<IBaseRepository<AttributeDto>, BaseRepository<AttributeDto>>();
+            services.AddScoped<IBaseRepository<Attribute>, BaseRepository<Attribute>>();
             services.AddScoped<IBaseRepository<AttributesForSimocalc>, BaseRepository<AttributesForSimocalc>>();
 
             // Services
             services.AddScoped<ICalculationTypeService, CalculationTypeService>();
             services.AddScoped<IModelTypeService, ModelTypeService>();
             services.AddScoped<IParameterService, ParameterService>();
-            services.AddScoped<ILoadAllDataService, LoadAllDataService>();
+            services.AddScoped<ILoadAllDataService, LoadService>();
             services.AddScoped<IAttributeDtoService, AttributeDtoService>();
             services.AddScoped<IAttributesForSimocalcService, AttributesForSimocalcService>();
+            services.AddScoped<IExcel, ExcelManager>();
         }
     }
 }

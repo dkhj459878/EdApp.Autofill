@@ -29,7 +29,7 @@ namespace EdApp.AutoFill.DAL.Model
         /// Attributes, gotten from Siemens.
         /// </summary>
         /// <returns></returns>
-        public ICollection<AttributeDto> Attributes { get; set; }
+        public ICollection<Attribute> Attributes { get; set; }
 
         /// <summary>
         /// Attributes for simocalc, gotten from Siemens.

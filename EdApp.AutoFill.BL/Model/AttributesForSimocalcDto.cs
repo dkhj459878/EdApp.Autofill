@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
 using EdApp.AutoFill.DAL.Contract;
+using EdApp.AutoFill.DAL.Model;
 
-namespace EdApp.AutoFill.DAL.Model
+namespace EdApp.AutoFill.BL.Model
 {
     /// <summary>
     /// Contains information about attributes gotten from Siemens.
     /// </summary>
-    public class AttributesForSimocalc : IIdentifier
+    public class AttributesForSimocalcDto : IIdentifier
     {
         /// <summary>
-        /// AttributesForSimocalc identifier.
+        /// AttributesForSimocalcDto identifier.
         /// </summary>
         public int Id { get; set; }
 

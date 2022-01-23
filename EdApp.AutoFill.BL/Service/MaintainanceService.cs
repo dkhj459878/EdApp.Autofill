@@ -1,19 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using EdApp.AutoFill.BL.Constant;
 using EdApp.AutoFill.BL.Contract.Services;
 using EdApp.AutoFill.BL.Extensions;
 using EdApp.AutoFill.BL.Model;
+using EdApp.AutoFill.DAL.Contract;
+using EdApp.AutoFill.DAL.Model;
 using Microsoft.Office.Interop.Excel;
 using Range = Microsoft.Office.Interop.Excel.Range;
 
 namespace EdApp.AutoFill.BL.Service
 {
     /// <inheritdoc cref="ILoadAllDataService" />
-    public class LoadAllDataService : ILoadAllDataService
+    public class LoadService : ILoadAllDataService
     {
         private const string ExcelFileFullPath = @"d:\Work\Siemens\docs\Mapping field names_2022_01_14.xlsx";
+        private const string BaseCalculation = "BaseCalculation";
         private const string WindingDesignFlatWire = "WindingDesignFlatWireCalculation";
         private const string WindingDesignRoundWire = "WindingDesignRoundWireCalculation";
         private const string DynamicTorque = "DynamicTorque";
@@ -28,17 +34,21 @@ namespace EdApp.AutoFill.BL.Service
         private readonly ICalculationTypeService _calculationTypeService;
         private readonly IModelTypeService _modelTypeService;
         private readonly IParameterService _parameterService;
+        private readonly IExcel _excelManager;
         private ModelTypeDto _request;
         private ModelTypeDto _response;
+        private ModelTypeDto _common;
         private CalculationTypeDto _windingDesignFlatWire;
         private CalculationTypeDto _windingDesignRoundWire;
         private CalculationTypeDto _dynamicTorque;
+        private CalculationTypeDto _basicCalculation;
 
-        public LoadAllDataService(IParameterService parameterService, ICalculationTypeService calculationTypeService,
-            IModelTypeService modelTypeService)
+        public LoadService(IParameterService parameterService, ICalculationTypeService calculationTypeService,
+            IModelTypeService modelTypeService, IExcel excelManager)
         {
             _calculationTypeService = calculationTypeService;
             _modelTypeService = modelTypeService;
+            _excelManager = excelManager;
             _parameterService = parameterService;
         }
 
@@ -49,9 +59,43 @@ namespace EdApp.AutoFill.BL.Service
             LoadParameters();
         }
 
+        private void LoadSimocalcJson()
+        {
+
+        }
+
+        public T DeserializeRow<T>(ExcelManager excelManager, Dictionary<string, int> map,
+            int index) where T : class, IIdentifier, new()
+        {
+            T deserializing = new T();
+            foreach (var (key, value) in map)
+            {
+                AssignTo<T>(deserializing, typeof(T).GetProperty(key), excelManager.GetCellValue(index, value));
+            }
+
+            return deserializing;
+        }
+
+        private void AssignTo<T>(T obj, PropertyInfo propertyInfo, object value)
+        {
+            propertyInfo.SetValue(obj, value, null);
+        }
+
+        private string GetPropertyName<TSource, TProperty>(
+            Expression<Func<TSource, TProperty>> propertyLambda)
+        {
+            string parentTypeName = typeof(TSource).Name;
+            MemberExpression expression = (MemberExpression)propertyLambda.Body;
+            string propertyName = expression.ToString();
+            string name = $"{parentTypeName}{propertyName[propertyName.IndexOf('.')..]}";
+            return name;
+        }
+
         private void LoadParameters()
         {
             if (!_parameterService.GetAllParameters().IsNullOrEmpty()) return;
+            _basicCalculation = _calculationTypeService
+                .GetAllCalculationTypes(ct => ct.Name == BaseCalculation).Single();
             _windingDesignFlatWire = _calculationTypeService
                 .GetAllCalculationTypes(ct => ct.Name == WindingDesignFlatWire).Single();
             _windingDesignRoundWire = _calculationTypeService
@@ -60,10 +104,11 @@ namespace EdApp.AutoFill.BL.Service
                 .GetAllCalculationTypes(ct => ct.Name == DynamicTorque).Single();
             _request = _modelTypeService.GetAllModelTypes(mt => mt.Name == Request).Single();
             _response = _modelTypeService.GetAllModelTypes(mt => mt.Name == Response).Single();
+            _common = _modelTypeService.GetAllModelTypes(mt => mt.Name == Common).Single();
             // Open excel sheet.
             var excel = new Application();
             var wb = excel.Workbooks.Open(ExcelFileFullPath);
-            var worksheet = (Worksheet) wb.Sheets[1];
+            var worksheet = (Worksheet) wb.Sheets[0];
             try
             {
                 var index = StartRowIndex - 1;
@@ -71,6 +116,9 @@ namespace EdApp.AutoFill.BL.Service
                 {
                     ++index;
                     if (IsNoData(worksheet, index)) continue;
+
+                    var commonData = GenerateCommonParameter(worksheet, index);
+                    if (commonData != null) _parameterService.AddParameter(commonData);
 
                     var flatRequest = GenerateFlatRequestParameter(worksheet, index);
                     if (flatRequest != null) _parameterService.AddParameter(flatRequest);
@@ -141,9 +189,14 @@ namespace EdApp.AutoFill.BL.Service
             {
                 Name = DynamicTorque
             };
+            var baseCalculation = new CalculationTypeDto
+            {
+                Name = BaseCalculation
+            };
             _calculationTypeService.AddCalculationType(windingDesignFlatWireInstance);
             _calculationTypeService.AddCalculationType(windingDesignRoundWireInstance);
             _calculationTypeService.AddCalculationType(dynamicTorque);
+            _calculationTypeService.AddCalculationType(baseCalculation);
         }
 
         #region Validations
@@ -156,6 +209,11 @@ namespace EdApp.AutoFill.BL.Service
                    && GetRoundResponse(worksheet, rowIndex).IsNullOrEmpty()
                    && GetTorqueRequest(worksheet, rowIndex).IsNullOrEmpty()
                    && GetTorqueResponse(worksheet, rowIndex).IsNullOrEmpty();
+        }
+
+        private bool IsNoCommonData(Worksheet worksheet, int rowIndex)
+        {
+            return GetFlatRequest(worksheet, rowIndex).IsNullOrEmpty();
         }
 
         private bool IsNoFlatRequestData(Worksheet worksheet, int rowIndex)
@@ -191,6 +249,11 @@ namespace EdApp.AutoFill.BL.Service
 
         #region Values calculations.
 
+        private ParameterDto GenerateCommonParameter(Worksheet worksheet, int rowIndex)
+        {
+            return GenerateParameters(IsNoCommonData, GetCommonRequest, _common, _basicCalculation, worksheet,
+                rowIndex);
+        }
         private ParameterDto GenerateFlatRequestParameter(Worksheet worksheet, int rowIndex)
         {
             return GenerateParameters(IsNoFlatRequestData, GetFlatRequest, _request, _windingDesignFlatWire, worksheet,
@@ -230,6 +293,11 @@ namespace EdApp.AutoFill.BL.Service
                     VariableName = GetVariableName(worksheet, rowIndex),
                     DescriptionEn = GetDescriptionEn(worksheet, rowIndex),
                     Unit = GetUnit(worksheet, rowIndex),
+                    ParametersForAllCalculationModules = GetVariableNameParametersForAllCalculationModules(worksheet, rowIndex),
+                    ParentEntity = GetParentEntity(worksheet, rowIndex),
+                    ExampleFlatDoubleCadge = GetExampleFlatDoubleCadge(worksheet, rowIndex),
+                    ExampleFlatRotorSingleCadge = GetExampleFlatRotorSingleCadge(worksheet, rowIndex),
+                    ExampleRoundDoubleCadge = GetExampleRoundDoubleCadge(worksheet, rowIndex),
                     DataType = GetDataType(worksheet, rowIndex),
                     Field = GetField(worksheet, rowIndex),
                     RelevantForHash = GetRelevantForHash(worksheet, rowIndex),
@@ -246,7 +314,7 @@ namespace EdApp.AutoFill.BL.Service
 
         private ParameterDto GenerateTorqueRequestParameter(Worksheet worksheet, int rowIndex)
         {
-            return GenerateParameters(IsNoTorqueRequestData, GetTorqueRequest, _response, _dynamicTorque, worksheet,
+            return GenerateParameters(IsNoTorqueRequestData, GetTorqueRequest, _request, _dynamicTorque, worksheet,
                 rowIndex);
         }
 
@@ -254,6 +322,11 @@ namespace EdApp.AutoFill.BL.Service
 
         #region Retrive values
 
+        private string GetCommonRequest(Worksheet worksheet, int rowIndex)
+        {
+            return (worksheet.Cells[rowIndex, ColumnIndexes.ParametersForAllCalculationModules()] as Range).Value?.ToString().Trim() ??
+                   string.Empty;
+        }
         private string GetFlatRequest(Worksheet worksheet, int rowIndex)
         {
             return (worksheet.Cells[rowIndex, ColumnIndexes.FlatRequest()] as Range).Value?.ToString().Trim() ??
@@ -271,7 +344,6 @@ namespace EdApp.AutoFill.BL.Service
             return (worksheet.Cells[rowIndex, ColumnIndexes.RoundRequest()] as Range).Value?.ToString().Trim() ??
                    string.Empty;
         }
-
         private string GetRoundResponse(Worksheet worksheet, int rowIndex)
         {
             return (worksheet.Cells[rowIndex, ColumnIndexes.RoundResponse()] as Range).Value?.ToString().Trim() ??
@@ -348,7 +420,31 @@ namespace EdApp.AutoFill.BL.Service
 
         private string GetVariableNameParametersForAllCalculationModules(Worksheet worksheet, int rowIndex)
         {
-            return (worksheet.Cells[rowIndex, ColumnIndexes.V()] as Range).Value?.ToString().Trim() ??
+            return (worksheet.Cells[rowIndex, ColumnIndexes.ParametersForAllCalculationModules()] as Range).Value?.ToString().Trim() ??
+                   string.Empty;
+        }
+
+        private string GetParentEntity(Worksheet worksheet, int rowIndex)
+        {
+            return (worksheet.Cells[rowIndex, ColumnIndexes.ParentEntity()] as Range).Value?.ToString().Trim() ??
+                   string.Empty;
+        }
+
+        private string GetExampleFlatDoubleCadge(Worksheet worksheet, int rowIndex)
+        {
+            return (worksheet.Cells[rowIndex, ColumnIndexes.ExampleExampleFlatDoubleCadgeRoundDoubleCadge()] as Range).Value?.ToString().Trim() ??
+                   string.Empty;
+        }
+
+        private string GetExampleRoundDoubleCadge(Worksheet worksheet, int rowIndex)
+        {
+            return (worksheet.Cells[rowIndex, ColumnIndexes.ExampleRoundDoubleCadge()] as Range).Value?.ToString().Trim() ??
+                   string.Empty;
+        }
+
+        private string GetExampleFlatRotorSingleCadge(Worksheet worksheet, int rowIndex)
+        {
+            return (worksheet.Cells[rowIndex, ColumnIndexes.ExampleFlatRotorSingleCadge()] as Range).Value?.ToString().Trim() ??
                    string.Empty;
         }
 

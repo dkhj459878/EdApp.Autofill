@@ -3,9 +3,9 @@ using EdApp.AutoFill.DAL.Contract;
 
 namespace EdApp.AutoFill.DAL.Model
 {
-    public class AttributeDto : IIdentifier, ICloneable
+    public class Attribute : IIdentifier, ICloneable
     {
-        public AttributeDto()
+        public Attribute()
         {
         }
 
@@ -17,7 +17,7 @@ namespace EdApp.AutoFill.DAL.Model
 
         public AttributesForSimocalc AttributesForSimocalc { get; set; }
 
-        public AttributeDto(string name, string value, string unit = "")
+        public Attribute(string name, string value, string unit = "")
         {
             Name = name; Value = value; Unit = unit; 
         }

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using AutoMapper;
 using EdApp.AutoFill.BL.Contract.Services;
-using EdApp.AutoFill.BL.Model;
 using EdApp.AutoFill.DAL.Contract.Repository;
 using EdApp.AutoFill.DAL.Model;
 
