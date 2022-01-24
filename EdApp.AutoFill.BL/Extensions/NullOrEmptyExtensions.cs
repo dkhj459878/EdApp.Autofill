@@ -16,5 +16,12 @@ namespace EdApp.AutoFill.BL.Extensions
 
             return !enumerable.Any();
         }
+
+        public static bool IsNullOrEmpty<TEntity>(this ICollection<TEntity> enumerable)
+        {
+            if (enumerable is null) return true;
+
+            return !enumerable.Any();
+        }
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using AutoMapper;
 using EdApp.AutoFill.BL.Contract.Services;
+using EdApp.AutoFill.BL.Model;
 using EdApp.AutoFill.DAL.Contract.Repository;
 using EdApp.AutoFill.DAL.Model;
 
@@ -61,7 +62,17 @@ namespace EdApp.AutoFill.BL.Service
 
         public int AddCalculationType(CalculationTypeDto calculationTypeDto)
         {
-            var calculationType = _mapper.Map<CalculationTypeDto, CalculationType>(calculationTypeDto);
+            CalculationType calculationType;
+            try
+            {
+                calculationType = _mapper.Map<CalculationTypeDto, CalculationType>(calculationTypeDto);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            
             UnitOfWork.CalculationType.Insert(calculationType);
             UnitOfWork.SaveChanges();
             // Detach added navigation entities as far as I have being got the error:

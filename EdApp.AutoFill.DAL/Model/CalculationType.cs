@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using EdApp.AutoFill.DAL.Contract;
 
 namespace EdApp.AutoFill.DAL.Model
@@ -8,8 +7,26 @@ namespace EdApp.AutoFill.DAL.Model
     /// Contains calculation types: for example: WindingDesignRoundWire,
     /// or WindingDesignRoundWire and etc.
     /// </summary>
-    public class CalculationType : IIdentifier, ICloneable
+    public class CalculationType : ModelBase<CalculationType>, IIdentifier
     {
+        protected bool Equals(CalculationType other)
+        {
+            return Name == other.Name;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((CalculationType) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Name != null ? Name.GetHashCode() : 0);
+        }
+
         /// <summary>
         /// Identifier.
         /// </summary>
@@ -37,9 +54,18 @@ namespace EdApp.AutoFill.DAL.Model
         /// <returns></returns>
         public ICollection<AttributesForSimocalc> AttributesForSimocalcs { get; set; }
 
-        public object Clone()
+        public static bool operator ==(CalculationType one, CalculationType other)
         {
-            return new CalculationType() {Id = Id, Name = Name};
+            if (one is null)
+            {
+                return false;
+            }
+            return one.Equals((object)other);
+        }
+
+        public static bool operator !=(CalculationType one, CalculationType other)
+        {
+            return !(one == other);
         }
     }
 }

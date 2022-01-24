@@ -6,6 +6,10 @@
         {
             return 33;
         }
+        public static int Name()
+        {
+            return 1;
+        }
 
         public static int FlatResponse()
         {

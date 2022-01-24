@@ -1,5 +1,4 @@
 ﻿using EdApp.AutoFill.BL.Contract.Services;
-using EdApp.AutoFill.BL.Model;
 using EdApp.AutoFill.BL.Service;
 using EdApp.AutoFill.DAL;
 using EdApp.AutoFill.DAL.Contract.Repository;

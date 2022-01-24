@@ -1,111 +1,198 @@
-﻿using EdApp.AutoFill.DAL.Contract;
+﻿using System;
+using EdApp.AutoFill.BL.Contract;
+using EdApp.AutoFill.DAL.Contract;
 
-namespace EdApp.AutoFill.DAL.Model
+namespace EdApp.AutoFill.BL.Model;
+
+/// <summary>
+///     Contains parameters' information.
+/// </summary>
+public class ParameterDto : ModelDtoBase<ParameterDto>, IIdentifier
 {
-    /// <summary>
-    /// Contains parameters' information.
-    /// </summary>
-    public class ParameterDto : IIdentifier
+    protected bool Equals(ParameterDto other)
     {
-        /// <summary>
-        /// Identifier.
-        /// </summary>
-        public int Id { get; set; }
+        return Name == other.Name && ModelTypeId == other.ModelTypeId && CalculationTypeId == other.CalculationTypeId && MandatoryParameter == other.MandatoryParameter && MandatoryValue == other.MandatoryValue && VariableName == other.VariableName && DescriptionEn == other.DescriptionEn && Unit == other.Unit && DataType == other.DataType && ParentEntity == other.ParentEntity && ExampleFlatRotorSingleCadge == other.ExampleFlatRotorSingleCadge && ExampleFlatDoubleCadge == other.ExampleFlatDoubleCadge && ExampleRoundDoubleCadge == other.ExampleRoundDoubleCadge && Field == other.Field && DesignWireFlatRequest == other.DesignWireFlatRequest && DesignWireFlatResponse == other.DesignWireFlatResponse && DesignWireRoundRequest == other.DesignWireRoundRequest && DesignWireRoundResponse == other.DesignWireRoundResponse && TorqueRequest == other.TorqueRequest && TorqueResponse == other.TorqueResponse && ParametersForAllCalculationModules == other.ParametersForAllCalculationModules && RelevantForHash == other.RelevantForHash && UIName == other.UIName;
+    }
 
-        /// <summary>
-        /// Parameter name. For example: WE.WEK.WINDING_TYPE.
-        /// </summary>
-        public string Name { get; set; }
+    public override bool Equals(object obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        return Equals((ParameterDto) obj);
+    }
 
-        /// <summary>
-        /// Model type identifier. For example: Request, Response or Common.
-        /// </summary>
-        public int ModelTypeId { get; set; }
+    public override int GetHashCode()
+    {
+        var hashCode = new HashCode();
+        hashCode.Add(Name);
+        hashCode.Add(ModelTypeId);
+        hashCode.Add(CalculationTypeId);
+        hashCode.Add(MandatoryParameter);
+        hashCode.Add(MandatoryValue);
+        hashCode.Add(VariableName);
+        hashCode.Add(DescriptionEn);
+        hashCode.Add(Unit);
+        hashCode.Add(DataType);
+        hashCode.Add(ParentEntity);
+        hashCode.Add(ExampleFlatRotorSingleCadge);
+        hashCode.Add(ExampleFlatDoubleCadge);
+        hashCode.Add(ExampleRoundDoubleCadge);
+        hashCode.Add(Field);
+        hashCode.Add(DesignWireFlatRequest);
+        hashCode.Add(DesignWireFlatResponse);
+        hashCode.Add(DesignWireRoundRequest);
+        hashCode.Add(DesignWireRoundResponse);
+        hashCode.Add(TorqueRequest);
+        hashCode.Add(TorqueResponse);
+        hashCode.Add(ParametersForAllCalculationModules);
+        hashCode.Add(RelevantForHash);
+        hashCode.Add(UIName);
+        return hashCode.ToHashCode();
+    }
 
-        /// <summary>
-        /// Model type. For example: Request, Response or Common.
-        /// </summary>
-        public ModelTypeDto ModelType { get; set; }
+    /// <summary>
+    ///     Identifier.
+    /// </summary>
+    public int Id { get; set; }
 
-        /// <summary>
-        /// Calculation type identifier. For example: WindingDesignRoundWire or WindingDesignRoundWire, etc.
-        /// </summary>
-        public int CalculationTypeId { get; set; }
+    /// <summary>
+    ///     Parameter name. For example: WE.WEK.WINDING_TYPE.
+    /// </summary>
+    public string Name { get; set; }
 
-        /// <summary>
-        /// Calculation type. For example: WindingDesignRoundWire or WindingDesignRoundWire, etc.
-        /// </summary>
-        public CalculationTypeDto CalculationType { get; set; }
+    /// <summary>
+    ///     Model type identifier. For example: Request, Response or Common.
+    /// </summary>
+    public int ModelTypeId { get; set; }
 
-        /// <summary>
-        /// Shows if parameter is required.
-        /// </summary>
-        public bool MandatoryParameter { get; set; }
+    /// <summary>
+    ///     Model type. For example: Request, Response or Common.
+    /// </summary>
+    public ModelTypeDto ModelType { get; set; }
 
-        /// <summary>
-        /// Shows if parameter value is required.
-        /// </summary>
-        public bool MandatoryValue { get; set; }
+    /// <summary>
+    ///     Calculation type identifier. For example: WindingDesignRoundWire or WindingDesignRoundWire, etc.
+    /// </summary>
+    public int CalculationTypeId { get; set; }
 
-        /// <summary>
-        /// Variable name. For example: z_leiter_nut_string.
-        /// </summary>
-        public string VariableName { get; set; }
+    /// <summary>
+    ///     Calculation type. For example: WindingDesignRoundWire or WindingDesignRoundWire, etc.
+    /// </summary>
+    public CalculationTypeDto CalculationType { get; set; }
 
-        /// <summary>
-        /// Parameter description in English languages.
-        /// </summary>
-        public string DescriptionEn { get; set; }
+    /// <summary>
+    ///     Shows if parameter is required.
+    /// </summary>
+    public bool MandatoryParameter { get; set; }
 
-        /// <summary>
-        /// Unit name. For example: mm, kg, etc.
-        /// </summary>
-        public string Unit { get; set; }
+    /// <summary>
+    ///     Shows if parameter value is required.
+    /// </summary>
+    public bool MandatoryValue { get; set; }
 
-        /// <summary>
-        /// Data type name. For example: int, string, bool, and etc.
-        /// </summary>
-        public string DataType { get; set; }
+    /// <summary>
+    ///     Variable name. For example: z_leiter_nut_string.
+    /// </summary>
+    public string VariableName { get; set; }
+
+    /// <summary>
+    ///     Parameter description in English languages.
+    /// </summary>
+    public string DescriptionEn { get; set; }
+
+    /// <summary>
+    ///     Unit name. For example: mm, kg, etc.
+    /// </summary>
+    public string Unit { get; set; }
+
+    /// <summary>
+    ///     Data type name. For example: int, string, bool, and etc.
+    /// </summary>
+    public string DataType { get; set; }
 
 
-        /// <summary>
-        /// Data structure of Basic calculation model, using ParentEntity dot notation.
-        /// </summary>
-        public string ParentEntity { get; set; }
+    /// <summary>
+    ///     Data structure of Basic calculation model, using ParentEntity dot notation.
+    /// </summary>
+    public string ParentEntity { get; set; }
 
-        /// <summary>
-        /// Example value flat wire copper rotor single cage.
-        /// </summary>
-        public string ExampleFlatRotorSingleCadge { get; set; }
+    /// <summary>
+    ///     Example value flat wire copper rotor single cage.
+    /// </summary>
+    public string ExampleFlatRotorSingleCadge { get; set; }
 
-        /// <summary>
-        /// Example value flat wire copper rotor double cage.
-        /// </summary>
-        public string ExampleFlatDoubleCadge { get; set; }
+    /// <summary>
+    ///     Example value flat wire copper rotor double cage.
+    /// </summary>
+    public string ExampleFlatDoubleCadge { get; set; }
 
-        /// <summary>
-        /// Example value round wire alu rotor.
-        /// </summary>
-        public string ExampleRoundDoubleCadge { get; set; }
+    /// <summary>
+    ///     Example value round wire alu rotor.
+    /// </summary>
+    public string ExampleRoundDoubleCadge { get; set; }
 
-        /// <summary>
-        /// Field name. For example: Type and etc.
-        /// </summary>
-        public string Field { get; set; }
+    /// <summary>
+    ///     Field name. For example: Type and etc.
+    /// </summary>
+    public string Field { get; set; }
 
-        /// <summary>
-        /// Parameter common for all calculation modules.
-        /// </summary>
-        public string ParametersForAllCalculationModules { get; set; }
+    /// <summary>
+    ///     Additional request parameter flat wire.
+    /// </summary>
+    public string DesignWireFlatRequest { get; set; }
 
-        /// <summary>
-        /// Shows if parameter value should be counted in the hash calculation.
-        /// </summary>
-        public bool RelevantForHash { get; set; }
+    /// <summary>
+    ///     Response parameter flat wire.
+    /// </summary>
+    public string DesignWireFlatResponse { get; set; }
 
-        /// <summary>
-        /// Name in the UI. For example: Stator winding type.
-        /// </summary>
-        public string UIName { get; set; }
+    /// <summary>
+    ///     Additional request parameter round wire.
+    /// </summary>
+    public string DesignWireRoundRequest { get; set; }
+
+    /// <summary>
+    ///     Additional request parameter round wire.
+    /// </summary>
+    public string DesignWireRoundResponse { get; set; }
+
+    /// <summary>
+    ///     Additional request parameter dynamic torque.
+    /// </summary>
+    public string TorqueRequest { get; set; }
+
+    /// <summary>
+    ///     Response parameter dynamic torque.
+    /// </summary>
+    public string TorqueResponse { get; set; }
+
+    /// <summary>
+    ///     Parameter common for all calculation modules.
+    /// </summary>
+    public string ParametersForAllCalculationModules { get; set; }
+
+    /// <summary>
+    ///     Shows if parameter value should be counted in the hash calculation.
+    /// </summary>
+    public bool RelevantForHash { get; set; }
+
+    /// <summary>
+    ///     Name in the UI. For example: Stator winding type.
+    /// </summary>
+    public string UIName { get; set; }
+
+    public static bool operator ==(ParameterDto one, ParameterDto other)
+    {
+        if (one is null)
+        {
+            return false;
+        }
+        return one.Equals((object)other);
+    }
+
+    public static bool operator !=(ParameterDto one, ParameterDto other)
+    {
+        return !(one == other);
     }
 }

@@ -11,6 +11,8 @@ namespace EdApp.AutoFill.BL.Mapper
             CreateMap<CalculationType, CalculationTypeDto>().ReverseMap();
             CreateMap<ModelType, ModelTypeDto>().ReverseMap();
             CreateMap<Parameter, ParameterDto>().ReverseMap();
+            CreateMap<AttributesForSimocalc, AttributesForSimocalcDto>().ReverseMap();
+            CreateMap<Parameter, ParameterDto>().ReverseMap();
         }
     }
 }

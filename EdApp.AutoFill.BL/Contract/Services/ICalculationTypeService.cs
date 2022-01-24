@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using EdApp.AutoFill.DAL.Model;
+using EdApp.AutoFill.BL.Model;
 
 namespace EdApp.AutoFill.BL.Contract.Services
 {

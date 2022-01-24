@@ -2,7 +2,7 @@
 
 namespace EdApp.AutoFill.DAL.Migrations
 {
-    public partial class AddCommonForAllCalculationsParameter : Migration
+    public partial class InitialCommit : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -57,21 +57,27 @@ namespace EdApp.AutoFill.DAL.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Jet:Identity", "1, 1"),
-                    Name = table.Column<string>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
                     ModelTypeId = table.Column<int>(nullable: false),
                     CalculationTypeId = table.Column<int>(nullable: false),
                     MandatoryParameter = table.Column<bool>(nullable: false),
                     MandatoryValue = table.Column<bool>(nullable: false),
-                    VariableName = table.Column<string>(nullable: false),
+                    VariableName = table.Column<string>(nullable: true),
                     DescriptionEn = table.Column<string>(nullable: true),
-                    Unit = table.Column<string>(nullable: false),
-                    DataType = table.Column<string>(nullable: false),
+                    Unit = table.Column<string>(nullable: true),
+                    DataType = table.Column<string>(nullable: true),
                     ParentEntity = table.Column<string>(nullable: true),
                     ExampleFlatRotorSingleCadge = table.Column<string>(nullable: true),
                     ExampleFlatDoubleCadge = table.Column<string>(nullable: true),
                     ExampleRoundDoubleCadge = table.Column<string>(nullable: true),
-                    Field = table.Column<string>(nullable: false),
-                    RelevantForHash = table.Column<bool>(nullable: false, defaultValue: false),
+                    Field = table.Column<string>(nullable: true),
+                    DesignWireFlatRequest = table.Column<string>(nullable: true),
+                    DesignWireFlatResponse = table.Column<string>(nullable: true),
+                    DesignWireRoundResponse = table.Column<string>(nullable: true),
+                    TorqueRequest = table.Column<string>(nullable: true),
+                    TorqueResponse = table.Column<string>(nullable: true),
+                    ParametersForAllCalculationModules = table.Column<string>(nullable: true),
+                    RelevantForHash = table.Column<bool>(nullable: false),
                     UIName = table.Column<string>(nullable: true)
                 },
                 constraints: table =>

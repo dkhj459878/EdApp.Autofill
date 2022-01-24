@@ -77,38 +77,38 @@ namespace EdApp.AutoFill.DAL
                 .IsRequired();
 
             // Parameter model required constraints.
-            modelBuilder.Entity<Parameter>()
-                .Property(p => p.ModelTypeId)
-                .IsRequired();
+            //modelBuilder.Entity<Parameter>()
+            //    .Property(p => p.ModelTypeId)
+            //    .IsRequired();
 
-            modelBuilder.Entity<Parameter>()
-                .Property(p => p.CalculationTypeId)
-                .IsRequired();
+            //modelBuilder.Entity<Parameter>()
+            //    .Property(p => p.CalculationTypeId)
+            //    .IsRequired();
 
-            modelBuilder.Entity<Parameter>()
-                .Property(p => p.DataType)
-                .IsRequired();
+            //modelBuilder.Entity<Parameter>()
+            //    .Property(p => p.DataType)
+            //    .IsRequired();
 
-            modelBuilder.Entity<Parameter>()
-                .Property(p => p.Field)
-                .IsRequired();
+            //modelBuilder.Entity<Parameter>()
+            //    .Property(p => p.Field)
+            //    .IsRequired();
 
-            modelBuilder.Entity<Parameter>()
-                .Property(p => p.Name)
-                .IsRequired();
+            //modelBuilder.Entity<Parameter>()
+            //    .Property(p => p.Name)
+            //    .IsRequired();
 
-            modelBuilder.Entity<Parameter>()
-                .Property(p => p.VariableName)
-                .IsRequired();
+            //modelBuilder.Entity<Parameter>()
+            //    .Property(p => p.VariableName)
+            //    .IsRequired();
 
-            modelBuilder.Entity<Parameter>()
-                .Property(p => p.RelevantForHash)
-                .IsRequired()
-                .HasDefaultValue(false);
+            //modelBuilder.Entity<Parameter>()
+            //    .Property(p => p.RelevantForHash)
+            //    .IsRequired()
+            //    .HasDefaultValue(false);
 
-            modelBuilder.Entity<Parameter>()
-                .Property(p => p.Unit)
-                .IsRequired();
+            //modelBuilder.Entity<Parameter>()
+            //    .Property(p => p.Unit)
+            //    .IsRequired();
 
             modelBuilder.Entity<Parameter>()
                 .HasKey(p => p.Id);

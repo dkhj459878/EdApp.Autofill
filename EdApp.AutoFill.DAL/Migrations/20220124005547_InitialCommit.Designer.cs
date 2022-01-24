@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EdApp.AutoFill.DAL.Migrations
 {
     [DbContext(typeof(AutoFillContext))]
-    [Migration("20220122221854_AddCommonForAllCalculationsParameter")]
-    partial class AddCommonForAllCalculationsParameter
+    [Migration("20220124005547_InitialCommit")]
+    partial class InitialCommit
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -20,7 +20,7 @@ namespace EdApp.AutoFill.DAL.Migrations
                 .HasAnnotation("ProductVersion", "3.1.22")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            modelBuilder.Entity("EdApp.AutoFill.DAL.Model.AttributeDto", b =>
+            modelBuilder.Entity("EdApp.AutoFill.DAL.Model.Attribute", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -113,10 +113,18 @@ namespace EdApp.AutoFill.DAL.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("DataType")
-                        .IsRequired()
                         .HasColumnType("longchar");
 
                     b.Property<string>("DescriptionEn")
+                        .HasColumnType("longchar");
+
+                    b.Property<string>("DesignWireFlatRequest")
+                        .HasColumnType("longchar");
+
+                    b.Property<string>("DesignWireFlatResponse")
+                        .HasColumnType("longchar");
+
+                    b.Property<string>("DesignWireRoundResponse")
                         .HasColumnType("longchar");
 
                     b.Property<string>("ExampleFlatDoubleCadge")
@@ -129,7 +137,6 @@ namespace EdApp.AutoFill.DAL.Migrations
                         .HasColumnType("longchar");
 
                     b.Property<string>("Field")
-                        .IsRequired()
                         .HasColumnType("longchar");
 
                     b.Property<bool>("MandatoryParameter")
@@ -142,26 +149,30 @@ namespace EdApp.AutoFill.DAL.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Name")
-                        .IsRequired()
+                        .HasColumnType("longchar");
+
+                    b.Property<string>("ParametersForAllCalculationModules")
                         .HasColumnType("longchar");
 
                     b.Property<string>("ParentEntity")
                         .HasColumnType("longchar");
 
                     b.Property<bool>("RelevantForHash")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasDefaultValue(false);
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("TorqueRequest")
+                        .HasColumnType("longchar");
+
+                    b.Property<string>("TorqueResponse")
+                        .HasColumnType("longchar");
 
                     b.Property<string>("UIName")
                         .HasColumnType("longchar");
 
                     b.Property<string>("Unit")
-                        .IsRequired()
                         .HasColumnType("longchar");
 
                     b.Property<string>("VariableName")
-                        .IsRequired()
                         .HasColumnType("longchar");
 
                     b.HasKey("Id");
@@ -173,7 +184,7 @@ namespace EdApp.AutoFill.DAL.Migrations
                     b.ToTable("Parameter");
                 });
 
-            modelBuilder.Entity("EdApp.AutoFill.DAL.Model.AttributeDto", b =>
+            modelBuilder.Entity("EdApp.AutoFill.DAL.Model.Attribute", b =>
                 {
                     b.HasOne("EdApp.AutoFill.DAL.Model.AttributesForSimocalc", "AttributesForSimocalc")
                         .WithMany("Attributes")

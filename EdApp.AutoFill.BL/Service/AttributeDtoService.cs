@@ -6,6 +6,7 @@ using AutoMapper;
 using EdApp.AutoFill.BL.Contract.Services;
 using EdApp.AutoFill.BL.Model;
 using EdApp.AutoFill.DAL.Contract.Repository;
+using Attribute = EdApp.AutoFill.DAL;
 
 namespace EdApp.AutoFill.BL.Service
 {
@@ -26,13 +27,13 @@ namespace EdApp.AutoFill.BL.Service
             string includeProperties = "")
         {
             var filter =
-                _mapper.Map<Expression<Func<AttributeDto, bool>>, Expression<Func<AttributeDto, bool>>>(
+                _mapper.Map<Expression<Func<AttributeDto, bool>>, Expression<Func<Attribute.Model.Attribute, bool>>>(
                     filterDto);
             var orderBy =
                 _mapper
                     .Map<Func<IQueryable<AttributeDto>, IOrderedQueryable<AttributeDto>>,
-                        Func<IQueryable<AttributeDto>, IOrderedQueryable<AttributeDto>>>(orderByDto);
-            return _mapper.Map<IEnumerable<AttributeDto>, IEnumerable<AttributeDto>>(
+                        Func<IQueryable<DAL.Model.Attribute>, IOrderedQueryable<DAL.Model.Attribute>>>(orderByDto);
+            return _mapper.Map<IEnumerable<DAL.Model.Attribute>, IEnumerable<AttributeDto>>(
                 UnitOfWork.AttributeDto.Get(filter, orderBy, includeProperties));
         }
 
@@ -44,24 +45,24 @@ namespace EdApp.AutoFill.BL.Service
             string includeProperties = "")
         {
             var filter =
-                _mapper.Map<Expression<Func<AttributeDto, bool>>, Expression<Func<AttributeDto, bool>>>(
+                _mapper.Map<Expression<Func<AttributeDto, bool>>, Expression<Func<DAL.Model.Attribute, bool>>>(
                     filterDto);
             var orderBy =
                 _mapper
                     .Map<Func<IQueryable<AttributeDto>, IOrderedQueryable<AttributeDto>>,
-                        Func<IQueryable<AttributeDto>, IOrderedQueryable<AttributeDto>>>(orderByDto);
-            return _mapper.Map<IEnumerable<AttributeDto>, IEnumerable<AttributeDto>>(
+                        Func<IQueryable<DAL.Model.Attribute>, IOrderedQueryable<DAL.Model.Attribute>>>(orderByDto);
+            return _mapper.Map<IEnumerable<DAL.Model.Attribute>, IEnumerable<AttributeDto>>(
                 UnitOfWork.AttributeDto.GetPage(pageSize, pageNumber, filter, orderBy, includeProperties));
         }
 
         public AttributeDto GetAttributeDto(int id)
         {
-            return _mapper.Map<AttributeDto, AttributeDto>(UnitOfWork.AttributeDto.GetById(id));
+            return _mapper.Map<DAL.Model.Attribute, AttributeDto>(UnitOfWork.AttributeDto.GetById(id));
         }
 
         public int AddAttributeDto(AttributeDto attributeDto)
         {
-            var attribute = _mapper.Map<AttributeDto, AttributeDto>(attributeDto);
+            var attribute = _mapper.Map<AttributeDto, DAL.Model.Attribute>(attributeDto);
             UnitOfWork.AttributeDto.Insert(attribute);
             UnitOfWork.SaveChanges();
             // Detach added navigation entities as far as I have being got the error:
@@ -75,7 +76,7 @@ namespace EdApp.AutoFill.BL.Service
 
         public void UpdateAttributeDto(AttributeDto attributeDto)
         {
-            var attribute = _mapper.Map<AttributeDto, AttributeDto>(attributeDto);
+            var attribute = _mapper.Map<AttributeDto, DAL.Model.Attribute>(attributeDto);
             UnitOfWork.AttributeDto.UpdateSimpleProperties(attribute, attribute.Id);
             UnitOfWork.SaveChanges();
         }
@@ -95,7 +96,7 @@ namespace EdApp.AutoFill.BL.Service
         public bool AttributeDtoExists(Expression<Func<AttributeDto, bool>> filterDto)
         {
             var filter =
-                _mapper.Map<Expression<Func<AttributeDto, bool>>, Expression<Func<AttributeDto, bool>>>(
+                _mapper.Map<Expression<Func<AttributeDto, bool>>, Expression<Func<DAL.Model.Attribute, bool>>>(
                     filterDto);
             return UnitOfWork.AttributeDto.Get(filter)
                 .FirstOrDefault() != null;

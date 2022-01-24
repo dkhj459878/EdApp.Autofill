@@ -1,12 +1,54 @@
-﻿using EdApp.AutoFill.DAL.Contract;
+﻿using System;
+using EdApp.AutoFill.DAL.Contract;
 
 namespace EdApp.AutoFill.DAL.Model
 {
     /// <summary>
     /// Contains parameters' information.
     /// </summary>
-    public class Parameter : IIdentifier
+    public class Parameter : ModelBase<Parameter>, IIdentifier
     {
+        protected bool Equals(Parameter other)
+        {
+            return Name == other.Name && ModelTypeId == other.ModelTypeId && CalculationTypeId == other.CalculationTypeId && MandatoryParameter == other.MandatoryParameter && MandatoryValue == other.MandatoryValue && VariableName == other.VariableName && DescriptionEn == other.DescriptionEn && Unit == other.Unit && DataType == other.DataType && ParentEntity == other.ParentEntity && ExampleFlatRotorSingleCadge == other.ExampleFlatRotorSingleCadge && ExampleFlatDoubleCadge == other.ExampleFlatDoubleCadge && ExampleRoundDoubleCadge == other.ExampleRoundDoubleCadge && Field == other.Field && DesignWireFlatRequest == other.DesignWireFlatRequest && DesignWireFlatResponse == other.DesignWireFlatResponse && DesignWireRoundResponse == other.DesignWireRoundResponse && TorqueRequest == other.TorqueRequest && TorqueResponse == other.TorqueResponse && ParametersForAllCalculationModules == other.ParametersForAllCalculationModules && RelevantForHash == other.RelevantForHash && UIName == other.UIName;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Parameter) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = new HashCode();
+            hashCode.Add(Name);
+            hashCode.Add(ModelTypeId);
+            hashCode.Add(CalculationTypeId);
+            hashCode.Add(MandatoryParameter);
+            hashCode.Add(MandatoryValue);
+            hashCode.Add(VariableName);
+            hashCode.Add(DescriptionEn);
+            hashCode.Add(Unit);
+            hashCode.Add(DataType);
+            hashCode.Add(ParentEntity);
+            hashCode.Add(ExampleFlatRotorSingleCadge);
+            hashCode.Add(ExampleFlatDoubleCadge);
+            hashCode.Add(ExampleRoundDoubleCadge);
+            hashCode.Add(Field);
+            hashCode.Add(DesignWireFlatRequest);
+            hashCode.Add(DesignWireFlatResponse);
+            hashCode.Add(DesignWireRoundResponse);
+            hashCode.Add(TorqueRequest);
+            hashCode.Add(TorqueResponse);
+            hashCode.Add(ParametersForAllCalculationModules);
+            hashCode.Add(RelevantForHash);
+            hashCode.Add(UIName);
+            return hashCode.ToHashCode();
+        }
+
         /// <summary>
         /// Identifier.
         /// </summary>
@@ -94,6 +136,31 @@ namespace EdApp.AutoFill.DAL.Model
         public string Field { get; set; }
 
         /// <summary>
+        /// Additional request parameter flat wire.
+        /// </summary>
+        public string DesignWireFlatRequest { get; set; }
+
+        /// <summary>
+        /// Response parameter flat wire.
+        /// </summary>
+        public string DesignWireFlatResponse { get; set; }
+
+        /// <summary>
+        /// Additional request parameter round wire.
+        /// </summary>
+        public string DesignWireRoundResponse { get; set; }
+
+        /// <summary>
+        /// Additional request parameter dynamic torque.
+        /// </summary>
+        public string TorqueRequest { get; set; }
+
+        /// <summary>
+        /// Response parameter dynamic torque.
+        /// </summary>
+        public string TorqueResponse { get; set; }
+
+        /// <summary>
         /// Parameter common for all calculation modules.
         /// </summary>
         public string ParametersForAllCalculationModules { get; set; }
@@ -107,5 +174,19 @@ namespace EdApp.AutoFill.DAL.Model
         /// Name in the UI. For example: Stator winding type.
         /// </summary>
         public string UIName { get; set; }
+
+        public static bool operator ==(Parameter one, Parameter other)
+        {
+            if (one is null)
+            {
+                return false;
+            }
+            return one.Equals((object)other);
+        }
+
+        public static bool operator !=(Parameter one, Parameter other)
+        {
+            return !(one == other);
+        }
     }
 }
