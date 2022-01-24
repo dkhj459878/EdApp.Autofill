@@ -62,7 +62,7 @@ public class LoadService : ILoadAllDataService
     }
 
 
-    public T DeserializeRow<T>(ExcelManager excelManager, Dictionary<string, int> map,
+    public T DeserializeRow<T>(ExcelManager excelManager, Dictionary<MemberInfo, int> map,
         int index) where T : class, IIdentifier, new()
     {
         var deserializing = new T();
@@ -105,10 +105,17 @@ public class LoadService : ILoadAllDataService
                 if (IsNoData(worksheet, index)) continue;
 
                 var commonData = GenerateCommonParameter(worksheet, index);
-                if (commonData != null) _parameterService.AddParameter(commonData);
+                if (commonData != null)
+                {
+                    _parameterService.AddParameter(commonData);
+                    break;
+                }
 
                 var flatRequest = GenerateFlatRequestParameter(worksheet, index);
-                if (flatRequest != null) _parameterService.AddParameter(flatRequest);
+                if (flatRequest != null)
+                {
+                    _parameterService.AddParameter(flatRequest);
+                }
 
                 var flatResponse = GenerateFlatResponseParameter(worksheet, index);
                 if (flatResponse != null) _parameterService.AddParameter(flatResponse);

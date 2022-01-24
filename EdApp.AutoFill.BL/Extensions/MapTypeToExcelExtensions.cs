@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 using EdApp.AutoFill.BL.Contract;
 using EdApp.AutoFill.BL.Enums;
 using EdApp.AutoFill.BL.Model;
@@ -9,7 +10,7 @@ namespace EdApp.AutoFill.BL.Extensions;
 
 public static class MapTypeToExcelExtensions
 {
-    public static Dictionary<string, (int Index, bool IsPrimaryForCheckingOnExistance)> GetMap<TSource>() where TSource : ModelDtoBase<TSource>, new()
+    public static Dictionary<PropertyInfo, (int Index, bool IsPrimaryForCheckingOnExistance)> GetMap<TSource>() where TSource : ModelDtoBase<TSource>, new()
     {
         return typeof(TSource).Name switch
         {
@@ -19,7 +20,7 @@ public static class MapTypeToExcelExtensions
         };
     }
 
-    private static Dictionary<string, (int Index, bool IsPrimaryForCheckingOnExistance)> GetAttributeDtoMapTypeToExcel()
+    private static Dictionary<PropertyInfo, (int Index, bool IsPrimaryForCheckingOnExistance)> GetAttributeDtoMapTypeToExcel()
     {
         var mapTypeToExcelBuilder = new MapTypeToExcelBuilder();
         mapTypeToExcelBuilder
@@ -32,7 +33,7 @@ public static class MapTypeToExcelExtensions
         return mapTypeToExcelBuilder.Build();
     }
 
-    private static Dictionary<string, (int Index, bool IsPrimaryForCheckingOnExistance)> GetParameterDtoMapTypeToExcel()
+    private static Dictionary<PropertyInfo, (int Index, bool IsPrimaryForCheckingOnExistance)> GetParameterDtoMapTypeToExcel()
     {
         var mapTypeToExcelBuilder = new MapTypeToExcelBuilder();
         mapTypeToExcelBuilder
@@ -66,11 +67,11 @@ public static class MapTypeToExcelExtensions
 
     private class MapTypeToExcelBuilder
     {
-        private readonly Dictionary<string, (int Index, bool IsPrimaryForCheckingOnExistance)> _mapTypeToExcel;
+        private readonly Dictionary<PropertyInfo, (int Index, bool IsPrimaryForCheckingOnExistance)> _mapTypeToExcel;
 
         public MapTypeToExcelBuilder()
         {
-            _mapTypeToExcel = new Dictionary<string, (int Index, bool IsPrimaryForCheckingOnExistance)>();
+            _mapTypeToExcel = new Dictionary<PropertyInfo, (int Index, bool IsPrimaryForCheckingOnExistance)>();
         }
 
         public MapTypeToExcelBuilder MapPropertyToExcelColumn<TSource, TProperty>(
@@ -78,13 +79,12 @@ public static class MapTypeToExcelExtensions
         {
             string parentTypeName = typeof(TSource).Name;
             MemberExpression expression = (MemberExpression)propertyLambda.Body;
-            string propertyName = expression.ToString();
-            string name = $"{parentTypeName}{propertyName[propertyName.IndexOf('.')..]}";
-            _mapTypeToExcel.Add(name, (columnIndex, isPrimaryForCheckingOnExistence));
+            var property = (PropertyInfo)expression.Member;
+            _mapTypeToExcel.Add(property, (columnIndex, isPrimaryForCheckingOnExistence));
             return this;
         }
 
-        public Dictionary<string, (int Index, bool IsPrimaryForCheckingOnExistance)> Build()
+        public Dictionary<PropertyInfo, (int Index, bool IsPrimaryForCheckingOnExistance)> Build()
         {
             return _mapTypeToExcel;
         }
