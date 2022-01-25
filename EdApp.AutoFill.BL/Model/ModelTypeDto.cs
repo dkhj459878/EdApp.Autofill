@@ -9,17 +9,9 @@ namespace EdApp.AutoFill.BL.Model
     /// </summary>
     public class ModelTypeDto : ModelDtoBase<ModelTypeDto>, IIdentifier
     {
-        protected bool Equals(ModelTypeDto other)
+        protected override bool Equals(ModelTypeDto other)
         {
             return Name == other.Name;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ModelTypeDto) obj);
         }
 
         public override int GetHashCode()
@@ -41,19 +33,5 @@ namespace EdApp.AutoFill.BL.Model
         /// Related parameters.
         /// </summary>
         public ICollection<ModelTypeDto> Parameters { get; set; }
-
-        public static bool operator ==(ModelTypeDto one, ModelTypeDto other)
-        {
-            if (one is null)
-            {
-                return false;
-            }
-            return one.Equals((object)other);
-        }
-
-        public static bool operator !=(ModelTypeDto one, ModelTypeDto other)
-        {
-            return !(one == other);
-        }
     }
 }

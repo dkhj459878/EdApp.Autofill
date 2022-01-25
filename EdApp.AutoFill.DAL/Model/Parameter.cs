@@ -8,7 +8,7 @@ namespace EdApp.AutoFill.DAL.Model
     /// </summary>
     public class Parameter : ModelBase<Parameter>, IIdentifier
     {
-        protected bool Equals(Parameter other)
+        protected override bool Equals(Parameter other)
         {
             return Name == other.Name && ModelTypeId == other.ModelTypeId && CalculationTypeId == other.CalculationTypeId && MandatoryParameter == other.MandatoryParameter && MandatoryValue == other.MandatoryValue && VariableName == other.VariableName && DescriptionEn == other.DescriptionEn && Unit == other.Unit && DataType == other.DataType && ParentEntity == other.ParentEntity && ExampleFlatRotorSingleCadge == other.ExampleFlatRotorSingleCadge && ExampleFlatDoubleCadge == other.ExampleFlatDoubleCadge && ExampleRoundDoubleCadge == other.ExampleRoundDoubleCadge && Field == other.Field && DesignWireFlatRequest == other.DesignWireFlatRequest && DesignWireFlatResponse == other.DesignWireFlatResponse && DesignWireRoundResponse == other.DesignWireRoundResponse && TorqueRequest == other.TorqueRequest && TorqueResponse == other.TorqueResponse && ParametersForAllCalculationModules == other.ParametersForAllCalculationModules && RelevantForHash == other.RelevantForHash && UIName == other.UIName;
         }
@@ -174,19 +174,5 @@ namespace EdApp.AutoFill.DAL.Model
         /// Name in the UI. For example: Stator winding type.
         /// </summary>
         public string UIName { get; set; }
-
-        public static bool operator ==(Parameter one, Parameter other)
-        {
-            if (one is null)
-            {
-                return false;
-            }
-            return one.Equals((object)other);
-        }
-
-        public static bool operator !=(Parameter one, Parameter other)
-        {
-            return !(one == other);
-        }
     }
 }

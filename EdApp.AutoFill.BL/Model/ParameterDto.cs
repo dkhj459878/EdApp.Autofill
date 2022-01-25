@@ -9,17 +9,9 @@ namespace EdApp.AutoFill.BL.Model;
 /// </summary>
 public class ParameterDto : ModelDtoBase<ParameterDto>, IIdentifier
 {
-    protected bool Equals(ParameterDto other)
+    protected override bool Equals(ParameterDto other)
     {
         return Name == other.Name && ModelTypeId == other.ModelTypeId && CalculationTypeId == other.CalculationTypeId && MandatoryParameter == other.MandatoryParameter && MandatoryValue == other.MandatoryValue && VariableName == other.VariableName && DescriptionEn == other.DescriptionEn && Unit == other.Unit && DataType == other.DataType && ParentEntity == other.ParentEntity && ExampleFlatRotorSingleCadge == other.ExampleFlatRotorSingleCadge && ExampleFlatDoubleCadge == other.ExampleFlatDoubleCadge && ExampleRoundDoubleCadge == other.ExampleRoundDoubleCadge && Field == other.Field && DesignWireFlatRequest == other.DesignWireFlatRequest && DesignWireFlatResponse == other.DesignWireFlatResponse && DesignWireRoundRequest == other.DesignWireRoundRequest && DesignWireRoundResponse == other.DesignWireRoundResponse && TorqueRequest == other.TorqueRequest && TorqueResponse == other.TorqueResponse && ParametersForAllCalculationModules == other.ParametersForAllCalculationModules && RelevantForHash == other.RelevantForHash && UIName == other.UIName;
-    }
-
-    public override bool Equals(object obj)
-    {
-        if (ReferenceEquals(null, obj)) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != this.GetType()) return false;
-        return Equals((ParameterDto) obj);
     }
 
     public override int GetHashCode()
@@ -181,18 +173,4 @@ public class ParameterDto : ModelDtoBase<ParameterDto>, IIdentifier
     ///     Name in the UI. For example: Stator winding type.
     /// </summary>
     public string UIName { get; set; }
-
-    public static bool operator ==(ParameterDto one, ParameterDto other)
-    {
-        if (one is null)
-        {
-            return false;
-        }
-        return one.Equals((object)other);
-    }
-
-    public static bool operator !=(ParameterDto one, ParameterDto other)
-    {
-        return !(one == other);
-    }
 }

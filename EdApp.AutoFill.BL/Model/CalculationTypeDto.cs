@@ -10,17 +10,9 @@ namespace EdApp.AutoFill.BL.Model
     /// </summary>
     public class CalculationTypeDto : ModelDtoBase<CalculationTypeDto>, IIdentifier
     {
-        protected bool Equals(CalculationTypeDto other)
+        protected override bool Equals(CalculationTypeDto other)
         {
             return Name == other.Name;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((CalculationTypeDto) obj);
         }
 
         public override int GetHashCode()
@@ -54,19 +46,5 @@ namespace EdApp.AutoFill.BL.Model
         /// </summary>
         /// <returns></returns>
         public ICollection<AttributesForSimocalcDto> AttributesForSimocalcs { get; set; }
-
-        public static bool operator ==(CalculationTypeDto one, CalculationTypeDto other)
-        {
-            if (one is null)
-            {
-                return false;
-            }
-            return one.Equals((object)other);
-        }
-
-        public static bool operator !=(CalculationTypeDto one, CalculationTypeDto other)
-        {
-            return !(one == other);
-        }
     }
 }

@@ -10,6 +10,8 @@ namespace EdApp.AutoFill.BL.Service
     /// <inheritdoc cref="IExcel"/>>
     public class ExcelManager : IExcel
     {  
+        protected bool Disposed = false;
+
         protected Application Application { get; private set; }
 
         public Workbook Workbook { get; private set; }
@@ -39,14 +41,39 @@ namespace EdApp.AutoFill.BL.Service
                 string.Empty;
         }
 
-        // Clear resources.
-        public void Dispose()
+        public virtual void Dispose(bool disposing)
+        {
+            if (Disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                CleanUnmanagedResources();
+            }
+            Disposed = true;
+        }
+
+        protected void CleanUnmanagedResources()
         {
             Worksheet = null;
             Workbook.Close();
             Workbook = null;
             Application.Quit();
             Application = null;
+        }
+
+        // Clear resources.
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~ExcelManager()
+        {
+            Dispose(false);
         }
     }
 }

@@ -6,17 +6,9 @@ namespace EdApp.AutoFill.BL.Model
 {
     public class AttributeDto : ModelDtoBase<AttributeDto>, IIdentifier
     {
-        protected bool Equals(AttributeDto other)
+        protected override bool Equals(AttributeDto other)
         {
             return CalculationTypeId == other.CalculationTypeId && AttributeDtosForSimocalcId == other.AttributeDtosForSimocalcId && Name == other.Name && Value == other.Value && Unit == other.Unit && Description == other.Description;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((AttributeDto) obj);
         }
 
         public override int GetHashCode()
@@ -62,19 +54,5 @@ namespace EdApp.AutoFill.BL.Model
         public string Value { get; set; }
         public string Unit { get; set; }
         public string Description { get; set; }
-
-        public static bool operator ==(AttributeDto one, AttributeDto other)
-        {
-            if (one is null)
-            {
-                return false;
-            }
-            return one.Equals((object)other);
-        }
-
-        public static bool operator !=(AttributeDto one, AttributeDto other)
-        {
-            return !(one == other);
-        }
     }
 }

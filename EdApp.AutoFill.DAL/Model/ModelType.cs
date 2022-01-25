@@ -9,17 +9,9 @@ namespace EdApp.AutoFill.DAL.Model
     /// </summary>
     public class ModelType : ModelBase<ModelType>, IIdentifier
     {
-        protected bool Equals(ModelType other)
+        protected override bool Equals(ModelType other)
         {
             return Name == other.Name;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ModelType) obj);
         }
 
         public override int GetHashCode()
@@ -41,19 +33,5 @@ namespace EdApp.AutoFill.DAL.Model
         /// Related parameters.
         /// </summary>
         public ICollection<Parameter> Parameters { get; set; }
-
-        public static bool operator ==(ModelType one, ModelType other)
-        {
-            if (one is null)
-            {
-                return false;
-            }
-            return one.Equals((object)other);
-        }
-
-        public static bool operator !=(ModelType one, ModelType other)
-        {
-            return !(one == other);
-        }
     }
 }

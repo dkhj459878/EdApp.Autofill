@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EdApp.AutoFill.BL", "EdApp.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{7EB72DAD-E863-42A2-8F5F-90CD406AAA32}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EdApp.AutoFill.UnitTests", "..\..\tests\EdApp.AutoFill.UnitTests\EdApp.AutoFill.UnitTests.csproj", "{CA1F2227-EF2D-49D6-8397-2352DFB4D718}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EdApp.AutoFill.UnitTests", "..\..\tests\EdApp.AutoFill.UnitTests\EdApp.AutoFill.UnitTests.csproj", "{CA1F2227-EF2D-49D6-8397-2352DFB4D718}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EdApp.AutoFill.UnitTests.IntegrationTests", "..\..\tests\EdApp.AutoFill.UnitTests.IntegrationTests\EdApp.AutoFill.UnitTests.IntegrationTests.csproj", "{9F910F18-1CB4-43AD-B80D-A3883BE4783F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,12 +37,17 @@ Global
 		{CA1F2227-EF2D-49D6-8397-2352DFB4D718}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA1F2227-EF2D-49D6-8397-2352DFB4D718}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA1F2227-EF2D-49D6-8397-2352DFB4D718}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F910F18-1CB4-43AD-B80D-A3883BE4783F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F910F18-1CB4-43AD-B80D-A3883BE4783F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F910F18-1CB4-43AD-B80D-A3883BE4783F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F910F18-1CB4-43AD-B80D-A3883BE4783F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{CA1F2227-EF2D-49D6-8397-2352DFB4D718} = {7EB72DAD-E863-42A2-8F5F-90CD406AAA32}
+		{9F910F18-1CB4-43AD-B80D-A3883BE4783F} = {7EB72DAD-E863-42A2-8F5F-90CD406AAA32}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FB7647AE-18A5-41F4-8F82-88A34BF5BA83}
