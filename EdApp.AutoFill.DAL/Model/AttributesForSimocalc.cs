@@ -8,17 +8,9 @@ namespace EdApp.AutoFill.DAL.Model
     /// </summary>
     public class AttributesForSimocalc : ModelBase<AttributesForSimocalc>, IIdentifier
     {
-        protected bool Equals(AttributesForSimocalc other)
+        protected override bool Equals(AttributesForSimocalc other)
         {
             return CalculationTypeId == other.CalculationTypeId;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((AttributesForSimocalc) obj);
         }
 
         public override int GetHashCode()
@@ -45,19 +37,5 @@ namespace EdApp.AutoFill.DAL.Model
         /// Calculation type: DesignWindingFlatWire and so on.
         /// </summary>
         public CalculationType CalculationType { get; set; }
-
-        public static bool operator ==(AttributesForSimocalc one, AttributesForSimocalc other)
-        {
-            if (one is null)
-            {
-                return false;
-            }
-            return one.Equals((object)other);
-        }
-
-        public static bool operator !=(AttributesForSimocalc one, AttributesForSimocalc other)
-        {
-            return !(one == other);
-        }
     }
 }

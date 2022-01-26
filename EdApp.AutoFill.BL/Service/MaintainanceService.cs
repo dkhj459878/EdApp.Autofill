@@ -32,7 +32,10 @@ public class LoadService : ILoadAllDataService
     private readonly ICalculationTypeService _calculationTypeService;
     private readonly IExcel _excelManager;
     private readonly IModelTypeService _modelTypeService;
+    private readonly IAttributeDtoService _attributeDtoService;
+    private readonly IAttributesForSimocalcService _attributesForSimocalcService;
     private readonly IParameterService _parameterService;
+    private readonly IJsonDataLoaderService _jsonDataLoaderService;
     private CalculationTypeDto _basicCalculation;
     private ModelTypeDto _common;
     private CalculationTypeDto _dynamicTorque;
@@ -42,12 +45,15 @@ public class LoadService : ILoadAllDataService
     private CalculationTypeDto _windingDesignRoundWire;
 
     public LoadService(IParameterService parameterService, ICalculationTypeService calculationTypeService,
-        IModelTypeService modelTypeService, IExcel excelManager)
+        IModelTypeService modelTypeService, IExcel excelManager, IJsonDataLoaderService jsonDataLoaderService, IAttributeDtoService attributeDtoService, IAttributesForSimocalcService attributesForSimocalcService)
     {
         _calculationTypeService = calculationTypeService;
         _modelTypeService = modelTypeService;
         _excelManager = excelManager;
         _parameterService = parameterService;
+        _jsonDataLoaderService = jsonDataLoaderService;
+        _attributeDtoService = attributeDtoService;
+        _attributesForSimocalcService = attributesForSimocalcService;
     }
 
     public void LoadAll()
@@ -55,19 +61,50 @@ public class LoadService : ILoadAllDataService
         LoadCalculationTypes();
         LoadModelTypes();
         LoadParameters();
+        LoadAttributesForSimocalcDto();
+        LoadAttributes();
+    }
+
+    private void LoadAttributesForSimocalcDto()
+    {
+        if (!_attributesForSimocalcService.GetAllAttributesForSimocalcs().IsNullOrEmpty()) return;
+        AttributesForSimocalcDto attributesForSimocalcDto = new()
+        {
+            CalculationType = _windingDesignFlatWire
+        };
+        _attributesForSimocalcService.AddAttributesForSimocalc(attributesForSimocalcDto);
+    }
+
+    private void LoadAttributes()
+    {
+        if (!_attributeDtoService.GetAllAttributeDtos().IsNullOrEmpty()) return;
+        var attributes = _jsonDataLoaderService.GetJsonDataConvertedToObject(string.Empty);
+        if (attributes.IsNullOrEmpty())
+        {
+            const string errorMessage = "Attribute data have not been deserialized correctly.";
+            throw new InvalidOperationException(errorMessage);
+        }
+        AttributesForSimocalcDto attributesForSimocalcDto = _attributesForSimocalcService.GetAllAttributesForSimocalcs(x => x.CalculationTypeId == _windingDesignFlatWire.Id).Single();
+        foreach (var attribute in attributes)
+        {
+            attribute.CalculationType = _windingDesignFlatWire;
+            attribute.AttributeDtosForSimocalc = attributesForSimocalcDto;
+            _attributeDtoService.AddAttributeDto(attribute);
+        }
     }
 
     private void LoadSimocalcJson()
     {
+        if (!_parameterService.GetAllParameters().IsNullOrEmpty()) return;
     }
 
 
-    public T DeserializeRow<T>(ExcelManager excelManager, Dictionary<MemberInfo, int> map,
+    public T DeserializeRow<T>(ExcelManager excelManager, Dictionary<PropertyInfo, int> map,
         int index) where T : class, IIdentifier, new()
     {
         var deserializing = new T();
-        foreach (var (key, value) in map)
-            AssignTo(deserializing, typeof(T).GetProperty(key), excelManager.GetCellValue(index, value));
+        foreach (var (propertyInfo, value) in map)
+            AssignTo(deserializing, propertyInfo, excelManager.GetCellValue(index, value));
 
         return deserializing;
     }
@@ -105,17 +142,10 @@ public class LoadService : ILoadAllDataService
                 if (IsNoData(worksheet, index)) continue;
 
                 var commonData = GenerateCommonParameter(worksheet, index);
-                if (commonData != null)
-                {
-                    _parameterService.AddParameter(commonData);
-                    break;
-                }
+                if (commonData != null) _parameterService.AddParameter(commonData);
 
                 var flatRequest = GenerateFlatRequestParameter(worksheet, index);
-                if (flatRequest != null)
-                {
-                    _parameterService.AddParameter(flatRequest);
-                }
+                if (flatRequest != null) _parameterService.AddParameter(flatRequest);
 
                 var flatResponse = GenerateFlatResponseParameter(worksheet, index);
                 if (flatResponse != null) _parameterService.AddParameter(flatResponse);
@@ -197,7 +227,8 @@ public class LoadService : ILoadAllDataService
 
     private bool IsNoData(Worksheet worksheet, int rowIndex)
     {
-        return GetFlatRequest(worksheet, rowIndex).IsNullOrEmpty()
+        return GetCommonRequest(worksheet, rowIndex).IsNullOrEmpty()
+               && GetFlatRequest(worksheet, rowIndex).IsNullOrEmpty()
                && GetFlatResponse(worksheet, rowIndex).IsNullOrEmpty()
                && GetRoundRequest(worksheet, rowIndex).IsNullOrEmpty()
                && GetRoundResponse(worksheet, rowIndex).IsNullOrEmpty()

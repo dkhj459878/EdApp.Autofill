@@ -122,6 +122,9 @@ namespace EdApp.AutoFill.DAL.Migrations
                     b.Property<string>("DesignWireFlatResponse")
                         .HasColumnType("longchar");
 
+                    b.Property<string>("DesignWireRoundRequest")
+                        .HasColumnType("longchar");
+
                     b.Property<string>("DesignWireRoundResponse")
                         .HasColumnType("longchar");
 

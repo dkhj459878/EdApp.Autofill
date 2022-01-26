@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EdApp.AutoFill.DAL.Migrations
 {
     [DbContext(typeof(AutoFillContext))]
-    [Migration("20220124005547_InitialCommit")]
-    partial class InitialCommit
+    [Migration("20220125235433_InitialMigration")]
+    partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -122,6 +122,9 @@ namespace EdApp.AutoFill.DAL.Migrations
                         .HasColumnType("longchar");
 
                     b.Property<string>("DesignWireFlatResponse")
+                        .HasColumnType("longchar");
+
+                    b.Property<string>("DesignWireRoundRequest")
                         .HasColumnType("longchar");
 
                     b.Property<string>("DesignWireRoundResponse")

@@ -58,9 +58,9 @@ namespace EdApp.AutoFill.BL.Service
         protected void CleanUnmanagedResources()
         {
             Worksheet = null;
-            Workbook.Close();
+            Workbook?.Close();
             Workbook = null;
-            Application.Quit();
+            Application?.Quit();
             Application = null;
         }
 

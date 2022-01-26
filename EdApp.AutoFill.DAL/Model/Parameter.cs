@@ -146,6 +146,11 @@ namespace EdApp.AutoFill.DAL.Model
         public string DesignWireFlatResponse { get; set; }
 
         /// <summary>
+        ///     Additional request parameter round wire.
+        /// </summary>
+        public string DesignWireRoundRequest { get; set; }
+
+        /// <summary>
         /// Additional request parameter round wire.
         /// </summary>
         public string DesignWireRoundResponse { get; set; }

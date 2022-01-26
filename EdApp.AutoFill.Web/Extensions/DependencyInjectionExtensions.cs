@@ -29,6 +29,7 @@ namespace EdApp.AutoFill.Web.Extensions
             services.AddScoped<IAttributeDtoService, AttributeDtoService>();
             services.AddScoped<IAttributesForSimocalcService, AttributesForSimocalcService>();
             services.AddScoped<IExcel, ExcelManager>();
+            services.AddScoped<IJsonDataLoaderService, JsonDataLoaderService>();
         }
     }
 }

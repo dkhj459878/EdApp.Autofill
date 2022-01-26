@@ -2,7 +2,7 @@
 
 namespace EdApp.AutoFill.DAL.Migrations
 {
-    public partial class InitialCommit : Migration
+    public partial class InitialMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -73,6 +73,7 @@ namespace EdApp.AutoFill.DAL.Migrations
                     Field = table.Column<string>(nullable: true),
                     DesignWireFlatRequest = table.Column<string>(nullable: true),
                     DesignWireFlatResponse = table.Column<string>(nullable: true),
+                    DesignWireRoundRequest = table.Column<string>(nullable: true),
                     DesignWireRoundResponse = table.Column<string>(nullable: true),
                     TorqueRequest = table.Column<string>(nullable: true),
                     TorqueResponse = table.Column<string>(nullable: true),
