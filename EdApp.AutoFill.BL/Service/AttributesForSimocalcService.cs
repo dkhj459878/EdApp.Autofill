@@ -71,6 +71,7 @@ namespace EdApp.AutoFill.BL.Service
             // Consider using 'DbContextOptionsBuilder.EnableSensitiveDataLogging' to see the conflicting key values.
             // I have found the answer at this URL: https://www.programmerall.com/article/3779294564/.
             UnitOfWork.AttributesForSimocalc.Detach(attribute);
+            UnitOfWork.CalculationType.Detach(attribute.CalculationType);
             return attribute.Id;
         }
 

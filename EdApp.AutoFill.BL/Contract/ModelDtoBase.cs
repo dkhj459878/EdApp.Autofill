@@ -28,11 +28,6 @@ namespace EdApp.AutoFill.BL.Contract
             return base.GetHashCode();
         }
 
-        public override string ToString()
-        {
-            return base.ToString();
-        }
-
         public static bool operator ==(ModelDtoBase<T> one, ModelDtoBase<T> other)
         {
             if (ReferenceEquals(one, other))
@@ -44,7 +39,7 @@ namespace EdApp.AutoFill.BL.Contract
             {
                 return false;
             }
-            return one.Equals((object)other);
+            return one.Equals(other);
         }
 
         public static bool operator !=(ModelDtoBase<T> one, ModelDtoBase<T> other)

@@ -30,6 +30,9 @@ namespace EdApp.AutoFill.Web.Extensions
             services.AddScoped<IAttributesForSimocalcService, AttributesForSimocalcService>();
             services.AddScoped<IExcel, ExcelManager>();
             services.AddScoped<IJsonDataLoaderService, JsonDataLoaderService>();
+            services.AddScoped<IJsonNodeService, JsonNodeService>();
+            services.AddScoped<IJsonLineService, JsonLineService>();
+            services.AddScoped<IJsonNodeService, JsonNodeService>();
         }
     }
 }

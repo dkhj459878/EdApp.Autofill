@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using EdApp.AutoFill.BL.Constant;
 using EdApp.AutoFill.BL.Contract.Services;
 using EdApp.AutoFill.BL.Extensions;
@@ -16,7 +17,7 @@ namespace EdApp.AutoFill.BL.Service;
 /// <inheritdoc cref="ILoadAllDataService" />
 public class LoadService : ILoadAllDataService
 {
-    private const string ExcelFileFullPath = @"d:\Work\Siemens\docs\Mapping field names_2022_01_14.xlsx";
+    private const string ExcelFileFullPath = @"d:\Work\Siemens\docs\Mapping field names_2022_02_03.xlsx";
     private const string BaseCalculation = "BaseCalculation";
     private const string WindingDesignFlatWire = "WindingDesignFlatWireCalculation";
     private const string WindingDesignRoundWire = "WindingDesignRoundWireCalculation";
@@ -58,16 +59,139 @@ public class LoadService : ILoadAllDataService
 
     public void LoadAll()
     {
-        LoadCalculationTypes();
-        LoadModelTypes();
-        LoadParameters();
-        LoadAttributesForSimocalcDto();
-        LoadAttributes();
+        //LoadCalculationTypes();
+        //LoadModelTypes();
+        //SetupEnvironmentParameters();
+        //LoadParameters();
+        //LoadAttributesForSimocalcDto();
+        //LoadAttributes();
+        CompartAttributes();
+    }
+
+    private void CompartAttributes()
+    {
+        #region Setup data
+        IReadOnlyCollection<AttributeDto> siemensAttributes = GetSiemensAttributes();
+        IReadOnlyCollection<AttributeDto> myAttributes = GetMyAttributes();
+        IEnumerable<ParameterDto> commonParameters = GetCommonParameters();
+        IReadOnlyCollection<AttributeDto> notInSiemens = myAttributes.Subtract(siemensAttributes);
+        IReadOnlyCollection<AttributeDto> notInMyJson = siemensAttributes.Subtract(myAttributes);
+        IReadOnlyCollection<AttributeDto> anywhere = myAttributes.HasCommonWith(siemensAttributes);
+        IReadOnlyCollection<AttributeDto> commonEqual = myAttributes.HasEqualWith(siemensAttributes);
+        IReadOnlyCollection<AttributeDto> commonSimilar = myAttributes.HasSimilarWith(siemensAttributes);
+        #endregion
+
+        var attributesNotInMy = myAttributes.Subtract(commonSimilar);
+
+        var notInSiemensResult = GetData(notInSiemens, commonParameters);
+        var notInMyJsonResult = GetData(notInMyJson, commonParameters);
+
+        var requiredUpdatedInMyEndPointMode = GetRequiredUpdateInMyEndPointModel(attributesNotInMy, commonParameters, siemensAttributes);
+
+        var attributeNotInSiemens = siemensAttributes.Subtract(commonSimilar);
+
+        var attributeAreEqual = attributesNotInMy.HasCommonWith
+            (attributeNotInSiemens);
+
+        string jsonEdApp = GetJsonFromAttributeDto(siemensAttributes, commonParameters);
+
+        //var retrieving = commonParameters.Where(p =>
+            //differenceAttributesInMy.Any(d =>
+            //d.Name.Equals(p.ParametersForAllCalculationModules, StringComparison.OrdinalIgnoreCase)));
+
+        var result = attributeNotInSiemens.Select(x =>
+        {
+            var parameter = commonParameters.SingleOrDefault(x => x.ParametersForAllCalculationModules.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+            var myAttribute = myAttributes.Single(y => y.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+            return new
+            {
+                parameter?.ParentEntity,
+                parameter?.Field,
+                OldValue = myAttribute.Value ?? string.Empty,
+                NewValue = x.Value ?? string.Empty,
+                NewUnit = x.Unit ?? string.Empty,
+                OldUnit = myAttribute.Unit ?? string.Empty
+            };
+        }).ToArray();
+
+        var siemensJsonOrdered = JsonSerializer.Serialize(siemensAttributes.OrderBy(x => x.Name));
+        var myJsonOrdered = JsonSerializer.Serialize(myAttributes.OrderBy(x => x.Name));
+
+        var jsonResult = JsonSerializer.Serialize(result);
+
+        var json = JsonSerializer.Serialize(result);
+    }
+
+    private string GetJsonFromAttributeDto(IReadOnlyCollection<AttributeDto> siemensAttributes, IEnumerable<ParameterDto> commonParameters)
+    {
+        throw new NotImplementedException();
+    }
+
+
+    private string GetData(IReadOnlyCollection<AttributeDto> notInSiemens, IEnumerable<ParameterDto> commonParameters)
+    {
+        var result = notInSiemens.Select(x =>
+        {
+            var attribute = commonParameters.FirstOrDefault(p => p.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+            if (attribute is null)
+            {
+                return $"{x.Name}:{x.Value} -> no data from Siemens";
+            }
+
+            return $"{attribute.ParentEntity}.{attribute.Name}: {x.Value} -> no data from ";
+
+        }).ToArray();
+        return string.Join(Environment.NewLine, result);
+    }
+
+
+    private string GetRequiredUpdateInMyEndPointModel(IEnumerable<AttributeDto> attributesNotInMy, IEnumerable<ParameterDto> commonParameters, IReadOnlyCollection<AttributeDto> fromSiemens)
+    {
+        var result = attributesNotInMy.Select(x =>
+        {
+            var attribute = commonParameters.SingleOrDefault(p => p.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+            var attributeFromSiemens = fromSiemens.SingleOrDefault(s => s.Name.Equals(x.Name));
+            if (attribute is null)
+            {
+                if (attributeFromSiemens is not null)
+                {
+                    return $"{x.Name}:{x.Value} -> {attributeFromSiemens.Value}";
+                }
+                return $"{x.Name}:{x.Value} -> no data from Siemens";
+            }
+
+            if (attributeFromSiemens is not null)
+            {
+                return $"{attribute.ParentEntity}.{attribute.Name}: {x.Value} -> {attributeFromSiemens.Value}";
+            }
+            return $"{attribute.ParentEntity}.{attribute.Name}: {x.Value} -> no data from ";
+
+        }).ToArray();
+        return string.Join(Environment.NewLine, result);
+    }
+
+    private IEnumerable<ParameterDto> GetCommonParameters()
+    {
+        return _parameterService.GetAllParameters();
+    }
+
+    private IReadOnlyCollection<AttributeDto> GetMyAttributes()
+    {
+        return (IReadOnlyCollection<AttributeDto>)_jsonDataLoaderService.GetJsonDataConvertedToObject(Enums.JsonKind.MyJson);
+    }
+
+    private IReadOnlyCollection<AttributeDto> GetSiemensAttributes()
+    {
+        return (IReadOnlyCollection<AttributeDto>)_jsonDataLoaderService.GetJsonDataConvertedToObject(Enums.JsonKind.SiemensJson);
     }
 
     private void LoadAttributesForSimocalcDto()
     {
-        if (!_attributesForSimocalcService.GetAllAttributesForSimocalcs().IsNullOrEmpty()) return;
+        if (!_attributesForSimocalcService.GetAllAttributesForSimocalcs().IsNullOrEmpty())
+        {
+            return;
+        }
+
         AttributesForSimocalcDto attributesForSimocalcDto = new()
         {
             CalculationType = _windingDesignFlatWire
@@ -78,7 +202,7 @@ public class LoadService : ILoadAllDataService
     private void LoadAttributes()
     {
         if (!_attributeDtoService.GetAllAttributeDtos().IsNullOrEmpty()) return;
-        var attributes = _jsonDataLoaderService.GetJsonDataConvertedToObject(string.Empty);
+        var attributes = _jsonDataLoaderService.GetJsonDataConvertedToObject(Enums.JsonKind.SiemensJson);
         if (attributes.IsNullOrEmpty())
         {
             const string errorMessage = "Attribute data have not been deserialized correctly.";
@@ -118,17 +242,6 @@ public class LoadService : ILoadAllDataService
     private void LoadParameters()
     {
         if (!_parameterService.GetAllParameters().IsNullOrEmpty()) return;
-        _basicCalculation = _calculationTypeService
-            .GetAllCalculationTypes(ct => ct.Name == BaseCalculation).Single();
-        _windingDesignFlatWire = _calculationTypeService
-            .GetAllCalculationTypes(ct => ct.Name == WindingDesignFlatWire).Single();
-        _windingDesignRoundWire = _calculationTypeService
-            .GetAllCalculationTypes(ct => ct.Name == WindingDesignRoundWire).Single();
-        _dynamicTorque = _calculationTypeService
-            .GetAllCalculationTypes(ct => ct.Name == DynamicTorque).Single();
-        _request = _modelTypeService.GetAllModelTypes(mt => mt.Name == Request).Single();
-        _response = _modelTypeService.GetAllModelTypes(mt => mt.Name == Response).Single();
-        _common = _modelTypeService.GetAllModelTypes(mt => mt.Name == Common).Single();
         // Open excel sheet.
         var excel = new Application();
         var wb = excel.Workbooks.Open(ExcelFileFullPath);
@@ -136,9 +249,9 @@ public class LoadService : ILoadAllDataService
         try
         {
             var index = StartRowIndex - 1;
-            while (index < EndRowIndex + 1)
+            while (index < EndRowIndex)
             {
-                ++index;
+                index++;
                 if (IsNoData(worksheet, index)) continue;
 
                 var commonData = GenerateCommonParameter(worksheet, index);
@@ -176,6 +289,21 @@ public class LoadService : ILoadAllDataService
             Marshal.FinalReleaseComObject(wb);
             Marshal.FinalReleaseComObject(excel);
         }
+    }
+
+    private void SetupEnvironmentParameters()
+    {
+        _basicCalculation = _calculationTypeService
+            .GetAllCalculationTypes(ct => ct.Name == BaseCalculation).Single();
+        _windingDesignFlatWire = _calculationTypeService
+            .GetAllCalculationTypes(ct => ct.Name == WindingDesignFlatWire).Single();
+        _windingDesignRoundWire = _calculationTypeService
+            .GetAllCalculationTypes(ct => ct.Name == WindingDesignRoundWire).Single();
+        _dynamicTorque = _calculationTypeService
+            .GetAllCalculationTypes(ct => ct.Name == DynamicTorque).Single();
+        _request = _modelTypeService.GetAllModelTypes(mt => mt.Name == Request).Single();
+        _response = _modelTypeService.GetAllModelTypes(mt => mt.Name == Response).Single();
+        _common = _modelTypeService.GetAllModelTypes(mt => mt.Name == Common).Single();
     }
 
     private void LoadModelTypes()

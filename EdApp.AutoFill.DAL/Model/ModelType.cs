@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using EdApp.AutoFill.DAL.Contract;
 
 namespace EdApp.AutoFill.DAL.Model

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore.Internal;
+using System.Linq;
 
 namespace EdApp.AutoFill.DAL.Extensions
 {
@@ -14,7 +14,7 @@ namespace EdApp.AutoFill.DAL.Extensions
         {
             if (enumerable is null) return true;
 
-            return !enumerable.Any();
+            return !enumerable.ToArray().Any();
         }
     }
 }

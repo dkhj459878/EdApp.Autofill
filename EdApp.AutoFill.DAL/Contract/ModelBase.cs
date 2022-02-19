@@ -44,7 +44,7 @@ namespace EdApp.AutoFill.DAL.Contract
             {
                 return false;
             }
-            return one.Equals((object)other);
+            return one.Equals(other);
         }
 
         public static bool operator !=(ModelBase<T> one, ModelBase<T> other)

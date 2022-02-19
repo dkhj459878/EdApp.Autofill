@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore.Internal;
+using System.Linq;
 
 namespace EdApp.AutoFill.BL.Extensions
 {
@@ -14,14 +14,14 @@ namespace EdApp.AutoFill.BL.Extensions
         {
             if (enumerable is null) return true;
 
-            return !enumerable.Any();
+            return !enumerable.ToArray().Any();
         }
 
         public static bool IsNullOrEmpty<TEntity>(this ICollection<TEntity> enumerable)
         {
             if (enumerable is null) return true;
 
-            return !enumerable.Any();
+            return !enumerable.ToArray().Any();
         }
     }
 }

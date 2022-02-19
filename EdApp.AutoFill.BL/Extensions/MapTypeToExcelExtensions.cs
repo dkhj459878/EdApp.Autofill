@@ -77,7 +77,6 @@ public static class MapTypeToExcelExtensions
         public MapTypeToExcelBuilder MapPropertyToExcelColumn<TSource, TProperty>(
             Expression<Func<TSource, TProperty>> propertyLambda, int columnIndex, bool isPrimaryForCheckingOnExistence = false)
         {
-            string parentTypeName = typeof(TSource).Name;
             MemberExpression expression = (MemberExpression)propertyLambda.Body;
             var property = (PropertyInfo)expression.Member;
             _mapTypeToExcel.Add(property, (columnIndex, isPrimaryForCheckingOnExistence));
