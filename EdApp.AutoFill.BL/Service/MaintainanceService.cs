@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using EdApp.AutoFill.BL.Constant;
 using EdApp.AutoFill.BL.Contract.Services;
+using EdApp.AutoFill.BL.Enums;
 using EdApp.AutoFill.BL.Extensions;
 using EdApp.AutoFill.BL.Model;
 using EdApp.AutoFill.DAL.Contract;
@@ -17,7 +18,7 @@ namespace EdApp.AutoFill.BL.Service;
 /// <inheritdoc cref="ILoadAllDataService" />
 public class LoadService : ILoadAllDataService
 {
-    private const string ExcelFileFullPath = @"d:\Work\Siemens\docs\Mapping field names_2022_02_03.xlsx";
+    private const string ExcelFileFullPath = @"d:\Work\Siemens\docs\Mapping field names_2022_02_25.xlsx";
     private const string BaseCalculation = "BaseCalculation";
     private const string WindingDesignFlatWire = "WindingDesignFlatWireCalculation";
     private const string WindingDesignRoundWire = "WindingDesignRoundWireCalculation";
@@ -30,13 +31,13 @@ public class LoadService : ILoadAllDataService
     private const int EndRowIndexProd = 1687;
     private const int StartRowIndex = StartRowIndexProd;
     private const int EndRowIndex = EndRowIndexProd;
-    private readonly ICalculationTypeService _calculationTypeService;
-    private readonly IExcel _excelManager;
-    private readonly IModelTypeService _modelTypeService;
     private readonly IAttributeDtoService _attributeDtoService;
     private readonly IAttributesForSimocalcService _attributesForSimocalcService;
-    private readonly IParameterService _parameterService;
+    private readonly ICalculationTypeService _calculationTypeService;
+    private readonly IExcel _excelManager;
     private readonly IJsonDataLoaderService _jsonDataLoaderService;
+    private readonly IModelTypeService _modelTypeService;
+    private readonly IParameterService _parameterService;
     private CalculationTypeDto _basicCalculation;
     private ModelTypeDto _common;
     private CalculationTypeDto _dynamicTorque;
@@ -46,7 +47,8 @@ public class LoadService : ILoadAllDataService
     private CalculationTypeDto _windingDesignRoundWire;
 
     public LoadService(IParameterService parameterService, ICalculationTypeService calculationTypeService,
-        IModelTypeService modelTypeService, IExcel excelManager, IJsonDataLoaderService jsonDataLoaderService, IAttributeDtoService attributeDtoService, IAttributesForSimocalcService attributesForSimocalcService)
+        IModelTypeService modelTypeService, IExcel excelManager, IJsonDataLoaderService jsonDataLoaderService,
+        IAttributeDtoService attributeDtoService, IAttributesForSimocalcService attributesForSimocalcService)
     {
         _calculationTypeService = calculationTypeService;
         _modelTypeService = modelTypeService;
@@ -59,11 +61,11 @@ public class LoadService : ILoadAllDataService
 
     public void LoadAll()
     {
-        //LoadCalculationTypes();
-        //LoadModelTypes();
-        //SetupEnvironmentParameters();
-        //LoadParameters();
-        //LoadAttributesForSimocalcDto();
+        LoadCalculationTypes();
+        LoadModelTypes();
+        SetupEnvironmentParameters();
+        LoadParameters();
+        LoadAttributesForSimocalcDto();
         //LoadAttributes();
         CompartAttributes();
     }
@@ -71,14 +73,16 @@ public class LoadService : ILoadAllDataService
     private void CompartAttributes()
     {
         #region Setup data
-        IReadOnlyCollection<AttributeDto> siemensAttributes = GetSiemensAttributes();
-        IReadOnlyCollection<AttributeDto> myAttributes = GetMyAttributes();
-        IEnumerable<ParameterDto> commonParameters = GetCommonParameters();
-        IReadOnlyCollection<AttributeDto> notInSiemens = myAttributes.Subtract(siemensAttributes);
-        IReadOnlyCollection<AttributeDto> notInMyJson = siemensAttributes.Subtract(myAttributes);
-        IReadOnlyCollection<AttributeDto> anywhere = myAttributes.HasCommonWith(siemensAttributes);
-        IReadOnlyCollection<AttributeDto> commonEqual = myAttributes.HasEqualWith(siemensAttributes);
-        IReadOnlyCollection<AttributeDto> commonSimilar = myAttributes.HasSimilarWith(siemensAttributes);
+
+        var siemensAttributes = GetSiemensAttributes();
+        var myAttributes = GetMyAttributes();
+        var commonParameters = GetCommonParameters();
+        var notInSiemens = myAttributes.Subtract(siemensAttributes);
+        var notInMyJson = siemensAttributes.Subtract(myAttributes);
+        var anywhere = myAttributes.HasCommonWith(siemensAttributes);
+        var commonEqual = myAttributes.HasEqualWith(siemensAttributes);
+        var commonSimilar = myAttributes.HasSimilarWith(siemensAttributes);
+
         #endregion
 
         var attributesNotInMy = myAttributes.Subtract(commonSimilar);
@@ -86,22 +90,24 @@ public class LoadService : ILoadAllDataService
         var notInSiemensResult = GetData(notInSiemens, commonParameters);
         var notInMyJsonResult = GetData(notInMyJson, commonParameters);
 
-        var requiredUpdatedInMyEndPointMode = GetRequiredUpdateInMyEndPointModel(attributesNotInMy, commonParameters, siemensAttributes);
+        var requiredUpdatedInMyEndPointMode =
+            GetRequiredUpdateInMyEndPointModel(attributesNotInMy, commonParameters, siemensAttributes);
 
         var attributeNotInSiemens = siemensAttributes.Subtract(commonSimilar);
 
         var attributeAreEqual = attributesNotInMy.HasCommonWith
             (attributeNotInSiemens);
 
-        string jsonEdApp = GetJsonFromAttributeDto(siemensAttributes, commonParameters);
+        var jsonEdApp = GetJsonFromAttributeDto(siemensAttributes, commonParameters);
 
         //var retrieving = commonParameters.Where(p =>
-            //differenceAttributesInMy.Any(d =>
-            //d.Name.Equals(p.ParametersForAllCalculationModules, StringComparison.OrdinalIgnoreCase)));
+        //differenceAttributesInMy.Any(d =>
+        //d.Name.Equals(p.ParametersForAllCalculationModules, StringComparison.OrdinalIgnoreCase)));
 
         var result = attributeNotInSiemens.Select(x =>
         {
-            var parameter = commonParameters.SingleOrDefault(x => x.ParametersForAllCalculationModules.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+            var parameter = commonParameters.SingleOrDefault(x =>
+                x.ParametersForAllCalculationModules.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
             var myAttribute = myAttributes.Single(y => y.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
             return new
             {
@@ -122,7 +128,8 @@ public class LoadService : ILoadAllDataService
         var json = JsonSerializer.Serialize(result);
     }
 
-    private string GetJsonFromAttributeDto(IReadOnlyCollection<AttributeDto> siemensAttributes, IEnumerable<ParameterDto> commonParameters)
+    private string GetJsonFromAttributeDto(IReadOnlyCollection<AttributeDto> siemensAttributes,
+        IEnumerable<ParameterDto> commonParameters)
     {
         throw new NotImplementedException();
     }
@@ -132,40 +139,33 @@ public class LoadService : ILoadAllDataService
     {
         var result = notInSiemens.Select(x =>
         {
-            var attribute = commonParameters.FirstOrDefault(p => p.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
-            if (attribute is null)
-            {
-                return $"{x.Name}:{x.Value} -> no data from Siemens";
-            }
+            var attribute =
+                commonParameters.FirstOrDefault(p => p.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+            if (attribute is null) return $"{x.Name}:{x.Value} -> no data from Siemens";
 
             return $"{attribute.ParentEntity}.{attribute.Name}: {x.Value} -> no data from ";
-
         }).ToArray();
         return string.Join(Environment.NewLine, result);
     }
 
 
-    private string GetRequiredUpdateInMyEndPointModel(IEnumerable<AttributeDto> attributesNotInMy, IEnumerable<ParameterDto> commonParameters, IReadOnlyCollection<AttributeDto> fromSiemens)
+    private string GetRequiredUpdateInMyEndPointModel(IEnumerable<AttributeDto> attributesNotInMy,
+        IEnumerable<ParameterDto> commonParameters, IReadOnlyCollection<AttributeDto> fromSiemens)
     {
         var result = attributesNotInMy.Select(x =>
         {
-            var attribute = commonParameters.SingleOrDefault(p => p.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
+            var attribute =
+                commonParameters.SingleOrDefault(p => p.Name.Equals(x.Name, StringComparison.OrdinalIgnoreCase));
             var attributeFromSiemens = fromSiemens.SingleOrDefault(s => s.Name.Equals(x.Name));
             if (attribute is null)
             {
-                if (attributeFromSiemens is not null)
-                {
-                    return $"{x.Name}:{x.Value} -> {attributeFromSiemens.Value}";
-                }
+                if (attributeFromSiemens is not null) return $"{x.Name}:{x.Value} -> {attributeFromSiemens.Value}";
                 return $"{x.Name}:{x.Value} -> no data from Siemens";
             }
 
             if (attributeFromSiemens is not null)
-            {
                 return $"{attribute.ParentEntity}.{attribute.Name}: {x.Value} -> {attributeFromSiemens.Value}";
-            }
             return $"{attribute.ParentEntity}.{attribute.Name}: {x.Value} -> no data from ";
-
         }).ToArray();
         return string.Join(Environment.NewLine, result);
     }
@@ -177,20 +177,18 @@ public class LoadService : ILoadAllDataService
 
     private IReadOnlyCollection<AttributeDto> GetMyAttributes()
     {
-        return (IReadOnlyCollection<AttributeDto>)_jsonDataLoaderService.GetJsonDataConvertedToObject(Enums.JsonKind.MyJson);
+        return (IReadOnlyCollection<AttributeDto>) _jsonDataLoaderService.GetJsonDataConvertedToObject(JsonKind.MyJson);
     }
 
     private IReadOnlyCollection<AttributeDto> GetSiemensAttributes()
     {
-        return (IReadOnlyCollection<AttributeDto>)_jsonDataLoaderService.GetJsonDataConvertedToObject(Enums.JsonKind.SiemensJson);
+        return (IReadOnlyCollection<AttributeDto>) _jsonDataLoaderService.GetJsonDataConvertedToObject(
+            JsonKind.SiemensJson);
     }
 
     private void LoadAttributesForSimocalcDto()
     {
-        if (!_attributesForSimocalcService.GetAllAttributesForSimocalcs().IsNullOrEmpty())
-        {
-            return;
-        }
+        if (!_attributesForSimocalcService.GetAllAttributesForSimocalcs().IsNullOrEmpty()) return;
 
         AttributesForSimocalcDto attributesForSimocalcDto = new()
         {
@@ -202,13 +200,15 @@ public class LoadService : ILoadAllDataService
     private void LoadAttributes()
     {
         if (!_attributeDtoService.GetAllAttributeDtos().IsNullOrEmpty()) return;
-        var attributes = _jsonDataLoaderService.GetJsonDataConvertedToObject(Enums.JsonKind.SiemensJson);
+        var attributes = _jsonDataLoaderService.GetJsonDataConvertedToObject(JsonKind.SiemensJson);
         if (attributes.IsNullOrEmpty())
         {
             const string errorMessage = "Attribute data have not been deserialized correctly.";
             throw new InvalidOperationException(errorMessage);
         }
-        AttributesForSimocalcDto attributesForSimocalcDto = _attributesForSimocalcService.GetAllAttributesForSimocalcs(x => x.CalculationTypeId == _windingDesignFlatWire.Id).Single();
+
+        var attributesForSimocalcDto = _attributesForSimocalcService
+            .GetAllAttributesForSimocalcs(x => x.CalculationTypeId == _windingDesignFlatWire.Id).Single();
         foreach (var attribute in attributes)
         {
             attribute.CalculationType = _windingDesignFlatWire;

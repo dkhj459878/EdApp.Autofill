@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using EdApp.AutoFill.BL.Contract.Services;
 using EdApp.AutoFill.BL.Enums;
+using EdApp.AutoFill.BL.Extensions;
 using EdApp.AutoFill.BL.Model;
 
 namespace EdApp.AutoFill.BL.Service;
 
 public class JsonTreeService : IJsonTreeService
 {
+    private const string Dot = ".";
+
     #region ctor
 
     public JsonTreeService(IJsonDataLoaderService jsonDataLoaderService, IParameterService parameterService)
@@ -79,7 +82,7 @@ public class JsonTreeService : IJsonTreeService
         // keys and from their full qualified path parameter value we remove this key values they are grouped by. 
         // For further details, please see Descendants property getter realization in the UnwrappedNode
         // object. Lazy loading pattern is realized here by the way.
-        parentUnwrappedNode.Descendants = parentUnwrappedNode.Descendants;
+        parentUnwrappedNode.ProcessDescendants();
         return parentUnwrappedNode;
     }
 
@@ -88,10 +91,8 @@ public class JsonTreeService : IJsonTreeService
         const string root = "root";
         var parentUnwrappedNode = new UnwrappedNode
         {
-            Key = root,
-            FullQualifiedPath = root
+            Key = root
         };
-        parentUnwrappedNode.Parent = parentUnwrappedNode;
         return parentUnwrappedNode;
     }
 
@@ -99,19 +100,12 @@ public class JsonTreeService : IJsonTreeService
         UnwrappedNode parentUnwrappedNode)
     {
         const string prefixForBaseCalculation = "BaseCalculation";
-        var key = string.IsNullOrEmpty(parameter.ParentEntity)
-            ? string.Empty
-            : $"{prefixForBaseCalculation}";
-        var isLeaf = string.IsNullOrEmpty(key);
         var unwrappedNode = new UnwrappedNode
         {
-            FullQualifiedPath = isLeaf
+            FullQualifiedPath = string.IsNullOrEmpty(parameter.ParentEntity)
                 ? $"{parameter.Field}"
-                : $"{prefixForBaseCalculation}.{parameter.Field}",
-            LeafName = isLeaf ? parameter.Field : null,
-            Value = attribute.Value,
-            Type = parameter.DataType,
-            Parent = parentUnwrappedNode
+                : $"{prefixForBaseCalculation}.{parameter.ParentEntity}.{parameter.Field}",
+            Value = new NodeValue(attribute.Value, parameter.DataType.GetDataType())
         };
         return unwrappedNode;
     }

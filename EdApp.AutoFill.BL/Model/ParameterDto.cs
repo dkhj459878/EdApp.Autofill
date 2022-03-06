@@ -125,7 +125,7 @@ public class ParameterDto : ModelDtoBase<ParameterDto>, IIdentifier
     public string ExampleRoundDoubleCadge { get; set; }
 
     /// <summary>
-    ///     Field name. For example: Type and etc.
+    ///     Field name. For example: DataType and etc.
     /// </summary>
     public string Field { get; set; }
 

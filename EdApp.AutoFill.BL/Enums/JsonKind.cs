@@ -5,6 +5,7 @@
         None = 0,
         MyJson = 1,
         SiemensJson = 2,
-        MyJsonModel = 3
+        MyJsonModel = 3,
+        DynamicTorque = 4
     }
 }

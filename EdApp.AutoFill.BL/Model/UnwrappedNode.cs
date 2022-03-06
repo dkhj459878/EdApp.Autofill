@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace EdApp.AutoFill.BL.Model;
 
@@ -11,7 +12,6 @@ namespace EdApp.AutoFill.BL.Model;
 public class UnwrappedNode : ICloneable
 {
     private const string Dot = ".";
-    private IEnumerable<UnwrappedNode> _descendants;
 
     /// <summary>
     ///     Shows either descendants were generated.
@@ -28,68 +28,29 @@ public class UnwrappedNode : ICloneable
     public string FullQualifiedPath { get; set; }
 
     /// <summary>
-    ///     Parent unwrapped node.
-    /// </summary>
-    public UnwrappedNode Parent { get; set; }
-
-    /// <summary>
     ///     Key of unwrapped node after processing.
     ///     For leaf it is empty string value.
     /// </summary>
     public string Key { get; set; }
 
     /// <summary>
-    ///     Data type. It means: int, float (any numeric), bool, string.
-    ///     Used for correct writing attribute value in json notation.
-    ///     It means either with double commas or not.
+    /// Value of the node with type.
     /// </summary>
-    public string Type { get; set; }
+    public NodeValue Value { get; set; }
 
     /// <summary>
-    ///     Data value in string format.
+    /// Shows if unwrapped node is leaf or not.
     /// </summary>
-    public string Value { get; set; }
-
-    /// <summary>
-    ///     Leaf name. If full qualified path
-    ///     is 'root.BaseCalculation.Tra.BgRotorSheet.Id', than
-    ///     LeafName is 'Id'.
-    ///     Added as a facilitator for processing 'FullQualifiedPath'
-    ///     values into true Node.
-    /// </summary>
-    public string LeafName { get; set; }
+    public bool IsLeaf => !string.IsNullOrEmpty(FullQualifiedPath) && !FullQualifiedPath.Contains(Dot);
 
     /// <summary>
     ///     Descendants of unwrapped node.
     /// </summary>
-    public IEnumerable<UnwrappedNode> Descendants
-    {
-        get
-        {
-            // Don't generate descendants if they are already have been generated.
-            if (AreDescendantsGenerated) return Descendants;
-            _descendants = GenerateDescendants();
-            MarkDescendantsAsGenerated();
-            return _descendants;
-        }
-
-        set => _descendants = value;
-    }
+    public IEnumerable<UnwrappedNode> Descendants { get; set; }
 
     public object Clone()
     {
-        // I was unfortunately unable to use MemberwiseClone as I 
-        // have got an exception doing this.
-        var clone = new UnwrappedNode
-        {
-            Value = Value,
-            FullQualifiedPath = FullQualifiedPath,
-            LeafName = LeafName,
-            Key = Key,
-            AreDescendantsGenerated = AreDescendantsGenerated,
-            Type = Type
-        };
-        return clone;
+        return MemberwiseClone();
     }
 
     protected void MarkDescendantsAsGenerated()
@@ -97,40 +58,27 @@ public class UnwrappedNode : ICloneable
         AreDescendantsGenerated = true;
     }
 
-    public IEnumerable<UnwrappedNode> GenerateDescendants()
+    public void ProcessDescendants()
     {
-        return Descendants.Select(ProcessNode)
-            .GroupBy(pn => pn.Key).Select(g => new UnwrappedNode
-            {
-                Key = g.Key,
-
-                Descendants = g.Select(d =>
-                {
-                    var clone = (UnwrappedNode) d.Clone();
-                    clone.Key = null;
-                    clone.Descendants = null;
-                    clone.Parent = null;
-                    return clone;
-                }).ToList(),
-            });
+        if (AreDescendantsGenerated) return;
+        var processedDescendants = Descendants.Select(x => ProcessNode(x)).ToList();
+        var groupedDescendants = processedDescendants
+            .GroupBy(pn => pn.Key).Select(g => new UnwrappedNode { Key = g.Key, Descendants = new List<UnwrappedNode>(g.ToList())});
+        Descendants = null;
+        MarkDescendantsAsGenerated();
     }
 
     public UnwrappedNode ProcessNode(UnwrappedNode processingNode)
     {
-        // We are not processing leaf unwrapped nodes. Return them as they are.
-        if (string.IsNullOrEmpty(processingNode.Key)) return processingNode;
-
-        var processedNode = processingNode.WiseClone();
-        if (!processedNode.Key.Contains(Dot))
+        var processedNode = processingNode.ClonePlane();
+        // If a passed unwrapped node is a leaf, than will return it as it is.
+        if (processingNode.IsLeaf)
         {
-            processedNode.FullQualifiedPath = processedNode.Key;
-            processedNode.LeafName = processedNode.Key;
-            processedNode.Key = string.Empty;
-            processedNode.Descendants = null;
-            processedNode.Parent = this;
+            processedNode.Key = processingNode.FullQualifiedPath;
             return processedNode;
         }
 
+        // Processes a not leaf case.
         processedNode.Key = processedNode.FullQualifiedPath.Substring(0,
             processedNode.FullQualifiedPath.IndexOf(Dot, StringComparison.InvariantCultureIgnoreCase));
         processedNode.FullQualifiedPath =
@@ -141,16 +89,27 @@ public class UnwrappedNode : ICloneable
 
     public UnwrappedNode WiseClone()
     {
-        var clone = (UnwrappedNode) Clone();
-        var shadowParent = (UnwrappedNode) Parent.Clone();
-        var shadowDescendants = Descendants.Select(descendant =>
+        // Creates plane copy.
+        var wiseClone = ClonePlane();
+        
+        // Creates plane copy of descendants.
+        if (Descendants is null)
         {
-            var child = (UnwrappedNode) descendant.Clone();
-            child.Parent = shadowParent;
-            return child;
+            return wiseClone;
+        }
+        var planeCopyOfDescendants = Descendants.Select(descendant =>
+        {
+            var planeCopyOfDescendant = descendant.ClonePlane();
+            return planeCopyOfDescendant;
         }).ToList();
-        clone.Parent = Parent;
-        clone.Descendants = shadowDescendants;
-        return clone;
+        
+        wiseClone.Descendants = planeCopyOfDescendants;
+
+        return wiseClone;
+    }
+
+    protected UnwrappedNode ClonePlane()
+    {
+        return (UnwrappedNode) Clone();
     }
 }

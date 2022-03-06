@@ -26,7 +26,7 @@ namespace EdApp.AutoFill.BL.Model
         public int Id { get; set; }
 
         /// <summary>
-        /// Type name. For example: WindingDesignRoundWire or WindingDesignRoundWire, etc.
+        /// DataType name. For example: WindingDesignRoundWire or WindingDesignRoundWire, etc.
         /// </summary>
         public string Name { get; set; }
 

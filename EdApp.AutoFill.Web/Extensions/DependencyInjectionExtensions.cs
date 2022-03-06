@@ -33,6 +33,7 @@ namespace EdApp.AutoFill.Web.Extensions
             services.AddScoped<IJsonNodeService, JsonNodeService>();
             services.AddScoped<IJsonLineService, JsonLineService>();
             services.AddScoped<IJsonNodeService, JsonNodeService>();
+            services.AddScoped<IDeserializer, Deserializer>();
         }
     }
 }

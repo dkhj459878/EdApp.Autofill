@@ -25,7 +25,7 @@ namespace EdApp.AutoFill.BL.Model
         public int Id { get; set; }
 
         /// <summary>
-        /// Type name (Request, Response or Common).
+        /// DataType name (Request, Response or Common).
         /// </summary>
         public string Name { get; set; }
 
