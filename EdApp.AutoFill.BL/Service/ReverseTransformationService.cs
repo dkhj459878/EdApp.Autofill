@@ -6,7 +6,6 @@ using System.Text;
 using EdApp.AutoFill.BL.Contract.Services;
 using EdApp.AutoFill.BL.Extensions;
 using EdApp.AutoFill.BL.Model;
-using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 
 namespace EdApp.AutoFill.BL.Service;
 
@@ -34,9 +33,12 @@ public class ReverseTransformationService : IReverseTransformationService
         const string upperContained = "_upper_";
         const string lowerContained = "_lower_";
         HandleConductorsNo(attributeDtos, upperContained, lowerContained, dotNotationDictionary);
+        HandleFillerHeight(attributeDtos, dotNotationDictionary);
         const string fillerHeightCopf = "BGW.FUELLSTREIFENKOPF";
         const string fillerHeightMitte = "BGW.FUELLSTREIFENMITTE";
-        HandleFillerHeight(attributeDtos, dotNotationDictionary);
+        HandleBgStartingWinding1StandardComments(attributeDtos, dotNotationDictionary);
+        const string bgStartingWinding1StandardCommentPartOne = "BGW.BEMERKUNG1";
+        const string bgStartingWinding1StandardCommentPartTow = "BGW.BEMERKUNG2";
         foreach (var uniqueAttributeDto in uniqueAttributeDtos)
         {
             // Handler exceptional case.
@@ -44,6 +46,10 @@ public class ReverseTransformationService : IReverseTransformationService
                 uniqueAttributeDto.Name.Contains(lowerContained, StringComparison.OrdinalIgnoreCase)) continue;
             if (uniqueAttributeDto.Name.Trim().Equals(fillerHeightCopf, StringComparison.OrdinalIgnoreCase) ||
                 uniqueAttributeDto.Name.Trim().Equals(fillerHeightMitte, StringComparison.OrdinalIgnoreCase)) continue;
+            if (uniqueAttributeDto.Name.Trim()
+                    .Equals(bgStartingWinding1StandardCommentPartOne, StringComparison.OrdinalIgnoreCase) ||
+                uniqueAttributeDto.Name.Trim().Equals(bgStartingWinding1StandardCommentPartTow,
+                    StringComparison.OrdinalIgnoreCase)) continue;
 
             if (DoesNotExistAnyWhere(parameterDtos, uniqueAttributeDto))
             {
@@ -81,21 +87,71 @@ public class ReverseTransformationService : IReverseTransformationService
         var notMappedAttributeDtos = string.Empty;
         if (!notFoundAttributesInParameters.Any())
             return ConvertDotNotationToJson(dotNotationDictionary) + notMappedAttributeDtos;
-        string newLine = Environment.NewLine;
-        string severalNewLines = newLine + newLine + newLine;
-        notMappedAttributeDtos = severalNewLines + "Attention: Followed below attributes are not mapped:" + Environment.NewLine;
+        var newLine = Environment.NewLine;
+        const string decorativeLine =
+            "---------------------------------------------------------------------------------------------";
+        var severalNewLines = newLine + newLine + newLine;
+        notMappedAttributeDtos = severalNewLines + decorativeLine +
+                                 "Attention: Followed below attributes are not mapped:" +
+                                 Environment.NewLine;
         notMappedAttributeDtos = notFoundAttributesInParameters.Aggregate(notMappedAttributeDtos,
             (current, notFoundAttribute) => current + (notFoundAttribute + Environment.NewLine));
 
         return ConvertDotNotationToJson(dotNotationDictionary) + notMappedAttributeDtos;
     }
 
+    private void HandleBgStartingWinding1StandardComments(List<AttributeDto> attributeDtos,
+        Dictionary<string, string> dotNotationDictionary)
+    {
+        const string bgStartingWinding1StandardCommentPartOne = "BGW.BEMERKUNG1";
+        const string bgStartingWinding1StandardCommentPartTwo = "BGW.BEMERKUNG2";
+        const string dotNotationPath = "Tra.BgStatorWinding1.StandardComments";
+        const string nullValue = "null";
+        var value = nullValue;
+        var firstPartCommentValue =
+            attributeDtos.GetAttributeDto(bgStartingWinding1StandardCommentPartOne).Value.Trim();
+        var secondPartCommentValue =
+            attributeDtos.GetAttributeDto(bgStartingWinding1StandardCommentPartTwo).Value.Trim();
+        const string openingCurlyBrace = "{";
+        const string closingCurlyBrace = "}";
+        const string doubleQuote = @"""";
+        const string coma = ",";
+        var standardCommentIndex = 0;
+        var resultList = new List<string>();
+        if (!string.IsNullOrEmpty(firstPartCommentValue))
+        {
+            ++standardCommentIndex;
+            resultList.Add($"{openingCurlyBrace}" +
+                           $"{doubleQuote}id{doubleQuote}:{doubleQuote}{standardCommentIndex}{doubleQuote}{coma}" +
+                           $"{doubleQuote}text{doubleQuote}:{doubleQuote}{{0}}{doubleQuote}{coma}" +
+                           $"{doubleQuote}values{doubleQuote}:[{AddDoubleQuotes(firstPartCommentValue)}]" +
+                           $"{closingCurlyBrace}");
+        }
+
+        if (!string.IsNullOrEmpty(secondPartCommentValue))
+        {
+            ++standardCommentIndex;
+            resultList.Add($"{openingCurlyBrace}" +
+                           $"{doubleQuote}id{doubleQuote}:{doubleQuote}{standardCommentIndex}{doubleQuote}{coma}" +
+                           $"{doubleQuote}text{doubleQuote}:{doubleQuote}{{0}}{doubleQuote}{coma}" +
+                           $"{doubleQuote}values{doubleQuote}:[{AddDoubleQuotes(secondPartCommentValue)}]" +
+                           $"{closingCurlyBrace}");
+        }
+
+        if (!resultList.Any())
+        {
+            dotNotationDictionary.Add(dotNotationPath, value);
+            return;
+        }
+
+        value = $"[{string.Join(",", resultList)}]";
+        dotNotationDictionary.Add(dotNotationPath, value);
+    }
+
     private void HandleFillerHeight(List<AttributeDto> attributeDtos, Dictionary<string, string> dotNotationDictionary)
     {
         const string firstCommentPart = "BGW.BEMERKUNG1";
         const string secondCommentPart = "BGW.BEMERKUNG2";
-        var firstCommentPartValue = attributeDtos.GetAttributeDto(firstCommentPart).Value;
-        var secondCommentPartValue = attributeDtos.GetAttributeDto(secondCommentPart).Value;
         const string fillerHeightCopf = "BGW.FUELLSTREIFENKOPF";
         const string fillerHeightMitte = "BGW.FUELLSTREIFENMITTE";
         var fillerHeightCopfValue = attributeDtos.GetAttributeDto(fillerHeightCopf).Value;
@@ -194,18 +250,17 @@ public class ReverseTransformationService : IReverseTransformationService
         var value = attributeDto.Value;
         if (parameterDto.DataType.Equals("string", StringComparison.OrdinalIgnoreCase)) value = AddDoubleQuotes(value);
         if (parameterDto.DataType.Equals("bool", StringComparison.OrdinalIgnoreCase))
-        {
             value = value switch
             {
                 "N" => "false",
                 "Y" => "true",
-                _ => value,
+                _ => value
             };
-        }
 
         var dotNotationForBaseAndSpecificCalculation = new List<KeyValuePair<string, string>>
         {
-            KeyValuePair.Create($"{parameterDto.ParentEntity}.{parameterDto.Field}", ConvertToNullStringIfNullOrEmpty(value)),
+            KeyValuePair.Create($"{parameterDto.ParentEntity}.{parameterDto.Field}",
+                ConvertToNullStringIfNullOrEmpty(value)),
             KeyValuePair.Create($"{parameterDto.Field}", ConvertToNullStringIfNullOrEmpty(value))
         };
 
@@ -218,14 +273,12 @@ public class ReverseTransformationService : IReverseTransformationService
         var value = attributeDto.Value;
         if (parameterDto.DataType.Equals("string", StringComparison.OrdinalIgnoreCase)) value = AddDoubleQuotes(value);
         if (parameterDto.DataType.Equals("bool", StringComparison.OrdinalIgnoreCase))
-        {
             value = value switch
             {
                 "N" => "false",
                 "Y" => "true",
-                _ => value,
+                _ => value
             };
-        }
         return KeyValuePair.Create($"{parameterDto.Field}", ConvertToNullStringIfNullOrEmpty(value));
     }
 
@@ -235,16 +288,15 @@ public class ReverseTransformationService : IReverseTransformationService
         var value = attributeDto.Value;
         if (parameterDto.DataType.Equals("string", StringComparison.OrdinalIgnoreCase)) value = AddDoubleQuotes(value);
         if (parameterDto.DataType.Equals("bool", StringComparison.OrdinalIgnoreCase))
-        {
             value = value switch
             {
                 "N" => "false",
                 "Y" => "true",
-                _ => value,
+                _ => value
             };
-        }
 
-        return KeyValuePair.Create($"{parameterDto.ParentEntity}.{parameterDto.Field}", ConvertToNullStringIfNullOrEmpty(value));
+        return KeyValuePair.Create($"{parameterDto.ParentEntity}.{parameterDto.Field}",
+            ConvertToNullStringIfNullOrEmpty(value));
     }
 
     private static string ConvertToNullStringIfNullOrEmpty(string value)
@@ -255,7 +307,7 @@ public class ReverseTransformationService : IReverseTransformationService
 
     private string AddDoubleQuotes(string value)
     {
-        const string nullValue = "null"; 
+        const string nullValue = "null";
         return string.IsNullOrEmpty(value) ? nullValue : $@"""{value}""";
     }
 
@@ -274,21 +326,13 @@ public class ReverseTransformationService : IReverseTransformationService
 
         foreach (var group in groupsWithDupl)
             if (group.All(x => string.IsNullOrEmpty(x.Value)))
-            {
                 attributes.Add(group.FirstOrDefault());
-            }
             else if (group.Count(x => !string.IsNullOrEmpty(x.Value)) == 1)
-            {
                 attributes.Add(group.First(x => !string.IsNullOrEmpty(x.Value)));
-            }
             else
-            {
-                var withValueList = group.Where(x => !string.IsNullOrEmpty(x.Value)).ToList();
-
                 //TODO: TIME TESTING IMPLEMENTATION
                 attributes.Add(group.FirstOrDefault(x => !string.IsNullOrEmpty(x.Value)));
-                //throw new BusinessLogicException($"In simocalc calculation request exist '{withValueList.First().Name}' Attibute with different values: {string.Join(' ', withValueList.Select(x => x.Value).Distinct())}");
-            }
+        //throw new BusinessLogicException($"In simocalc calculation request exist '{withValueList.First().Name}' Attibute with different values: {string.Join(' ', withValueList.Select(x => x.Value).Distinct())}");
 
         return attributes;
     }
@@ -350,8 +394,6 @@ public class ReverseTransformationService : IReverseTransformationService
 
         private bool IsLast { get; set; }
 
-        private Node Parent { get; set; }
-
         private string Key { get; }
 
         private string Value { get; }
@@ -409,7 +451,6 @@ public class ReverseTransformationService : IReverseTransformationService
             var last = _children.Any() ? _children.Last().Value : null;
             if (last is not null) last.IsLast = false;
             _children.Add(node.Key, node);
-            node.Parent = this;
             node.IsLast = true;
         }
     }
