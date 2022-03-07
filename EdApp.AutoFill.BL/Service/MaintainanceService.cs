@@ -18,7 +18,7 @@ namespace EdApp.AutoFill.BL.Service;
 /// <inheritdoc cref="ILoadAllDataService" />
 public class LoadService : ILoadAllDataService
 {
-    private const string ExcelFileFullPath = @"d:\Work\Siemens\docs\Mapping field names_2022_02_25.xlsx";
+    private const string ExcelFileFullPath = @"d:\Work\Siemens\docs\Mapping field names_2022_03_02.xlsx";
     private const string BaseCalculation = "BaseCalculation";
     private const string WindingDesignFlatWire = "WindingDesignFlatWireCalculation";
     private const string WindingDesignRoundWire = "WindingDesignRoundWireCalculation";

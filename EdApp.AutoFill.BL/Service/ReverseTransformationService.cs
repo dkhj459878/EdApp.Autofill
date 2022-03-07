@@ -6,6 +6,7 @@ using System.Text;
 using EdApp.AutoFill.BL.Contract.Services;
 using EdApp.AutoFill.BL.Extensions;
 using EdApp.AutoFill.BL.Model;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 
 namespace EdApp.AutoFill.BL.Service;
 
@@ -27,13 +28,23 @@ public class ReverseTransformationService : IReverseTransformationService
         var attributeDtos = _deserializer.DeserializeTo<MappingDtoCollection>(fileInfo).attributes;
         var parameterDtos = _parameterService.GetAllParameters(null, null, "CalculationType").ToList();
 
-        var specificCalculationParameters = parameterDtos.Where(p =>
-            p.CalculationType.Name.Equals(WindingDesignRoundWire, StringComparison.OrdinalIgnoreCase));
         var uniqueAttributeDtos = RemoveDuplicates(attributeDtos.ToList());
         var notFoundAttributesInParameters = new List<AttributeDto>();
         var dotNotationDictionary = new Dictionary<string, string>();
+        const string upperContained = "_upper_";
+        const string lowerContained = "_lower_";
+        HandleConductorsNo(attributeDtos, upperContained, lowerContained, dotNotationDictionary);
+        const string fillerHeightCopf = "BGW.FUELLSTREIFENKOPF";
+        const string fillerHeightMitte = "BGW.FUELLSTREIFENMITTE";
+        HandleFillerHeight(attributeDtos, dotNotationDictionary);
         foreach (var uniqueAttributeDto in uniqueAttributeDtos)
         {
+            // Handler exceptional case.
+            if (uniqueAttributeDto.Name.Contains(upperContained, StringComparison.OrdinalIgnoreCase) ||
+                uniqueAttributeDto.Name.Contains(lowerContained, StringComparison.OrdinalIgnoreCase)) continue;
+            if (uniqueAttributeDto.Name.Trim().Equals(fillerHeightCopf, StringComparison.OrdinalIgnoreCase) ||
+                uniqueAttributeDto.Name.Trim().Equals(fillerHeightMitte, StringComparison.OrdinalIgnoreCase)) continue;
+
             if (DoesNotExistAnyWhere(parameterDtos, uniqueAttributeDto))
             {
                 notFoundAttributesInParameters.Add(uniqueAttributeDto.Clone());
@@ -43,6 +54,8 @@ public class ReverseTransformationService : IReverseTransformationService
             if (HasOnlyBaseCalculationParameters(parameterDtos, uniqueAttributeDto))
             {
                 var parameterDto = GetBaseParameterByName(parameterDtos, uniqueAttributeDto);
+                if (string.IsNullOrEmpty(parameterDto.ParentEntity) &&
+                    string.IsNullOrEmpty(parameterDto.Field)) continue;
                 var (key, value) = GenerateDotNotationElementForBaseCalculation(parameterDto, uniqueAttributeDto);
                 dotNotationDictionary.Add(key, value);
                 continue;
@@ -68,11 +81,50 @@ public class ReverseTransformationService : IReverseTransformationService
         var notMappedAttributeDtos = string.Empty;
         if (!notFoundAttributesInParameters.Any())
             return ConvertDotNotationToJson(dotNotationDictionary) + notMappedAttributeDtos;
-        notMappedAttributeDtos = "Attention: Followed below attributes are not mapped:" + Environment.NewLine;
+        string newLine = Environment.NewLine;
+        string severalNewLines = newLine + newLine + newLine;
+        notMappedAttributeDtos = severalNewLines + "Attention: Followed below attributes are not mapped:" + Environment.NewLine;
         notMappedAttributeDtos = notFoundAttributesInParameters.Aggregate(notMappedAttributeDtos,
             (current, notFoundAttribute) => current + (notFoundAttribute + Environment.NewLine));
 
         return ConvertDotNotationToJson(dotNotationDictionary) + notMappedAttributeDtos;
+    }
+
+    private void HandleFillerHeight(List<AttributeDto> attributeDtos, Dictionary<string, string> dotNotationDictionary)
+    {
+        const string firstCommentPart = "BGW.BEMERKUNG1";
+        const string secondCommentPart = "BGW.BEMERKUNG2";
+        var firstCommentPartValue = attributeDtos.GetAttributeDto(firstCommentPart).Value;
+        var secondCommentPartValue = attributeDtos.GetAttributeDto(secondCommentPart).Value;
+        const string fillerHeightCopf = "BGW.FUELLSTREIFENKOPF";
+        const string fillerHeightMitte = "BGW.FUELLSTREIFENMITTE";
+        var fillerHeightCopfValue = attributeDtos.GetAttributeDto(fillerHeightCopf).Value;
+        var fillerHeightMitteValue = attributeDtos.GetAttributeDto(fillerHeightMitte).Value;
+        const string w41Entrance = "W41";
+        const string w43Entrance = "W43";
+        const string dotNotationString = "Tra.BgStatorWinding1.FillerHeight";
+        var value = "0";
+        if (firstCommentPart.Contains(w41Entrance, StringComparison.OrdinalIgnoreCase) ||
+            secondCommentPart.Contains(w41Entrance, StringComparison.OrdinalIgnoreCase)) value = fillerHeightCopfValue;
+
+        if (firstCommentPart.Contains(w43Entrance, StringComparison.OrdinalIgnoreCase) ||
+            firstCommentPart.Contains(w43Entrance, StringComparison.OrdinalIgnoreCase))
+            value = fillerHeightMitteValue;
+        dotNotationDictionary.Add(dotNotationString, value);
+    }
+
+    private void HandleConductorsNo(List<AttributeDto> attributeDtos, string upperContained, string lowerContained,
+        Dictionary<string, string> dotNotationDictionary)
+    {
+        if (attributeDtos.Any(a => a.Name.Trim().Contains(upperContained, StringComparison.OrdinalIgnoreCase)) &&
+            attributeDtos.Any(a => a.Name.Trim().Contains(lowerContained, StringComparison.OrdinalIgnoreCase)))
+        {
+            var upper = attributeDtos.Single(a =>
+                a.Name.Trim().Contains(upperContained, StringComparison.OrdinalIgnoreCase)).Value;
+            var lower = attributeDtos.Single(a =>
+                a.Name.Trim().Contains(lowerContained, StringComparison.OrdinalIgnoreCase)).Value;
+            dotNotationDictionary.Add("ConductorsSlotNo", AddDoubleQuotes($"{upper}+{lower}"));
+        }
     }
 
     private bool HasBothBaseAndRoundWireCalculationsParameters(List<ParameterDto> parameterDtos,
@@ -104,14 +156,17 @@ public class ReverseTransformationService : IReverseTransformationService
     private bool HasRoundWireParameterWithName(IEnumerable<ParameterDto> parameterDtos, AttributeDto attributeDto)
     {
         var hasRoundWireParameterWithName = parameterDtos.Where(p =>
-            p.CalculationType.Name.Equals(WindingDesignRoundWire, StringComparison.OrdinalIgnoreCase)).Any(p => p.DesignWireRoundRequest.Trim().Equals(attributeDto.Name.Trim()));
+                p.CalculationType.Name.Equals(WindingDesignRoundWire, StringComparison.OrdinalIgnoreCase))
+            .Any(p => p.DesignWireRoundRequest.Trim().Equals(attributeDto.Name.Trim()));
         return hasRoundWireParameterWithName;
     }
 
     private bool HasBaseParameterWithName(IEnumerable<ParameterDto> parameterDtos, AttributeDto attributeDto)
     {
         var hasBaseParameterWithName = parameterDtos.Where(p =>
-            p.CalculationType.Name.Equals(BaseCalculation, StringComparison.OrdinalIgnoreCase)).Any(p => p.ParametersForAllCalculationModules.Trim().Equals(attributeDto.Name.Trim(), StringComparison.OrdinalIgnoreCase));
+            p.CalculationType.Name.Equals(BaseCalculation, StringComparison.OrdinalIgnoreCase)).Any(p =>
+            p.ParametersForAllCalculationModules.Trim()
+                .Equals(attributeDto.Name.Trim(), StringComparison.OrdinalIgnoreCase));
         return hasBaseParameterWithName;
     }
 
@@ -119,7 +174,8 @@ public class ReverseTransformationService : IReverseTransformationService
     {
         var baseCalculationParameter = parameterDtos.Where(p =>
             p.CalculationType.Name.Equals(BaseCalculation, StringComparison.OrdinalIgnoreCase)).First(p =>
-            p.ParametersForAllCalculationModules.Trim().Equals(attributeDto.Name.Trim(), StringComparison.OrdinalIgnoreCase));
+            p.ParametersForAllCalculationModules.Trim()
+                .Equals(attributeDto.Name.Trim(), StringComparison.OrdinalIgnoreCase));
         return baseCalculationParameter;
     }
 
@@ -137,11 +193,20 @@ public class ReverseTransformationService : IReverseTransformationService
     {
         var value = attributeDto.Value;
         if (parameterDto.DataType.Equals("string", StringComparison.OrdinalIgnoreCase)) value = AddDoubleQuotes(value);
+        if (parameterDto.DataType.Equals("bool", StringComparison.OrdinalIgnoreCase))
+        {
+            value = value switch
+            {
+                "N" => "false",
+                "Y" => "true",
+                _ => value,
+            };
+        }
 
         var dotNotationForBaseAndSpecificCalculation = new List<KeyValuePair<string, string>>
         {
-            KeyValuePair.Create($"{parameterDto.ParentEntity}.{parameterDto.Field}", value),
-            KeyValuePair.Create($"{parameterDto.Field}", value)
+            KeyValuePair.Create($"{parameterDto.ParentEntity}.{parameterDto.Field}", ConvertToNullStringIfNullOrEmpty(value)),
+            KeyValuePair.Create($"{parameterDto.Field}", ConvertToNullStringIfNullOrEmpty(value))
         };
 
         return dotNotationForBaseAndSpecificCalculation;
@@ -152,8 +217,16 @@ public class ReverseTransformationService : IReverseTransformationService
     {
         var value = attributeDto.Value;
         if (parameterDto.DataType.Equals("string", StringComparison.OrdinalIgnoreCase)) value = AddDoubleQuotes(value);
-
-        return KeyValuePair.Create($"{parameterDto.Field}", value);
+        if (parameterDto.DataType.Equals("bool", StringComparison.OrdinalIgnoreCase))
+        {
+            value = value switch
+            {
+                "N" => "false",
+                "Y" => "true",
+                _ => value,
+            };
+        }
+        return KeyValuePair.Create($"{parameterDto.Field}", ConvertToNullStringIfNullOrEmpty(value));
     }
 
     private KeyValuePair<string, string> GenerateDotNotationElementForBaseCalculation(ParameterDto parameterDto,
@@ -161,62 +234,29 @@ public class ReverseTransformationService : IReverseTransformationService
     {
         var value = attributeDto.Value;
         if (parameterDto.DataType.Equals("string", StringComparison.OrdinalIgnoreCase)) value = AddDoubleQuotes(value);
+        if (parameterDto.DataType.Equals("bool", StringComparison.OrdinalIgnoreCase))
+        {
+            value = value switch
+            {
+                "N" => "false",
+                "Y" => "true",
+                _ => value,
+            };
+        }
 
-        return KeyValuePair.Create($"{parameterDto.ParentEntity}.{parameterDto.Field}", value);
+        return KeyValuePair.Create($"{parameterDto.ParentEntity}.{parameterDto.Field}", ConvertToNullStringIfNullOrEmpty(value));
+    }
+
+    private static string ConvertToNullStringIfNullOrEmpty(string value)
+    {
+        const string nullValue = "null";
+        return string.IsNullOrEmpty(value) ? nullValue : value;
     }
 
     private string AddDoubleQuotes(string value)
     {
-        return string.IsNullOrEmpty(value) ? null : $@"""{value}""";
-    }
-
-    private bool ContainedOnlyInBaseCalculation(IEnumerable<ParameterDto> parameterDtos, string attributeName,
-        string specificCalculationType)
-    {
-        return GetParameterDtoOnCalculationType(parameterDtos, BaseCalculation)
-                   .Any(p => p.Name.Equals(attributeName, StringComparison.OrdinalIgnoreCase)) &&
-               !GetParameterDtoOnCalculationType(parameterDtos, specificCalculationType)
-                   .Any(p => p.Name.Equals(attributeName, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private bool ContainedOnlyInSpecificCalculation(IEnumerable<ParameterDto> parameterDtos, string attributeName,
-        string specificCalculationType)
-    {
-        return !GetParameterDtoOnCalculationType(parameterDtos, BaseCalculation)
-                   .Any(p => p.Name.Equals(attributeName, StringComparison.OrdinalIgnoreCase)) &&
-               GetParameterDtoOnCalculationType(parameterDtos, specificCalculationType)
-                   .Any(p => p.Name.Equals(attributeName, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private bool ContainedBothInBaseAndSpecificCalculation(IEnumerable<ParameterDto> parameterDtos,
-        string attributeName, string specificCalculationType)
-    {
-        return GetParameterDtoOnCalculationType(parameterDtos, BaseCalculation)
-                   .Any(p => p.Name.Equals(attributeName, StringComparison.OrdinalIgnoreCase)) &&
-               GetParameterDtoOnCalculationType(parameterDtos, specificCalculationType)
-                   .Any(p => p.Name.Equals(attributeName, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private ParameterDto GetBaseParameterByName(IEnumerable<ParameterDto> parameterDtos, string parameterName)
-    {
-        return parameterDtos
-            .Where(p => p.CalculationType.Name.Equals(BaseCalculation, StringComparison.OrdinalIgnoreCase))
-            .Single(p => p.Name.Equals(parameterName, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private ParameterDto GetSpecificParameterByName(IEnumerable<ParameterDto> parameterDtos, string parameterName,
-        string specificCalculationType)
-    {
-        return parameterDtos
-            .Where(p => p.CalculationType.Name.Equals(specificCalculationType, StringComparison.OrdinalIgnoreCase))
-            .Single(p => p.Name.Equals(parameterName, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private IEnumerable<ParameterDto> GetParameterDtoOnCalculationType(IEnumerable<ParameterDto> parameterDtos,
-        string calculationType)
-    {
-        return parameterDtos.Where(p =>
-            p.CalculationType.Name.Equals(calculationType, StringComparison.OrdinalIgnoreCase));
+        const string nullValue = "null"; 
+        return string.IsNullOrEmpty(value) ? nullValue : $@"""{value}""";
     }
 
     private IReadOnlyCollection<AttributeDto> RemoveDuplicates(List<AttributeDto> attributeDtos)
@@ -237,9 +277,9 @@ public class ReverseTransformationService : IReverseTransformationService
             {
                 attributes.Add(group.FirstOrDefault());
             }
-            else if (group.Where(x => !string.IsNullOrEmpty(x.Value)).Count() == 1)
+            else if (group.Count(x => !string.IsNullOrEmpty(x.Value)) == 1)
             {
-                attributes.Add(group.Where(x => !string.IsNullOrEmpty(x.Value)).First());
+                attributes.Add(group.First(x => !string.IsNullOrEmpty(x.Value)));
             }
             else
             {

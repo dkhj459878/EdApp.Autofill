@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Linq;
 using EdApp.AutoFill.BL.Contract.Services;
 using EdApp.AutoFill.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
