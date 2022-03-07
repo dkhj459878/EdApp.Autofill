@@ -54,5 +54,10 @@ namespace EdApp.AutoFill.BL.Model
         public string Value { get; set; }
         public string Unit { get; set; }
         public string Description { get; set; }
+
+        public override string ToString()
+        {
+            return $"Name: {Name}, Value: {Value}, Unit: {Unit}";
+        }
     }
 }

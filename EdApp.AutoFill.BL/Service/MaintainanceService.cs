@@ -28,7 +28,7 @@ public class LoadService : ILoadAllDataService
     private const string Common = "Common";
     private const string Mandatory = "mandatory";
     private const int StartRowIndexProd = 12;
-    private const int EndRowIndexProd = 1687;
+    private const int EndRowIndexProd = 1740;
     private const int StartRowIndex = StartRowIndexProd;
     private const int EndRowIndex = EndRowIndexProd;
     private readonly IAttributeDtoService _attributeDtoService;
@@ -65,12 +65,12 @@ public class LoadService : ILoadAllDataService
         LoadModelTypes();
         SetupEnvironmentParameters();
         LoadParameters();
-        LoadAttributesForSimocalcDto();
+        //LoadAttributesForSimocalcDto();
         //LoadAttributes();
-        CompartAttributes();
+        //CompareAttributes();
     }
 
-    private void CompartAttributes()
+    private void CompareAttributes()
     {
         #region Setup data
 

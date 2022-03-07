@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using EdApp.AutoFill.BL.Contract.Services;
 
 namespace EdApp.AutoFill.BL.Service;
@@ -29,7 +28,6 @@ public class Deserializer : IDeserializer
             throw new ArgumentNullException(message);
         }
     }
-
 
     private void EnsureFileExists(FileInfo fullFilePath)
     {

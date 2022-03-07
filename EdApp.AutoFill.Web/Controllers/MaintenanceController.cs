@@ -1,5 +1,7 @@
-﻿using EdApp.AutoFill.BL.Contract.Services;
-using EdApp.AutoFill.BL.Enums;
+﻿using System.IO;
+using System.Linq;
+using EdApp.AutoFill.BL.Contract.Services;
+using EdApp.AutoFill.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -9,32 +11,39 @@ namespace EdApp.AutoFill.Web.Controllers
     [Route("[controller]")]
     public class MaintenanceController : ControllerBase
     {
+        private const string DynamicTorque = "DynamicTorque";
+
         private readonly ILogger<MaintenanceController> _logger;
         private readonly ICalculationTypeService _calculationTypeService;
         private readonly IModelTypeService _modelTypeService;
         private readonly IParameterService _parameterService;
         private readonly ILoadAllDataService _loadAllDataService;
+        private readonly IReverseTransformationService _reverseTransformationService;
 
-        public MaintenanceController(ILogger<MaintenanceController> logger, ICalculationTypeService calculationTypeService, IModelTypeService modelTypeService, IParameterService parameterService, ILoadAllDataService loadAllDataService)
+        public MaintenanceController(ILogger<MaintenanceController> logger, ICalculationTypeService calculationTypeService, IModelTypeService modelTypeService, IParameterService parameterService, ILoadAllDataService loadAllDataService, IReverseTransformationService reverseTransformationService)
         {
             _logger = logger;
             _calculationTypeService = calculationTypeService;
             _modelTypeService = modelTypeService;
             _parameterService = parameterService;
             _loadAllDataService = loadAllDataService;
+            _reverseTransformationService = reverseTransformationService;
         }
 
-        private string clearData = @"https://localhost:44392/Maintenance/ClearAllDatabases";
+        private const string ClearData = @"https://localhost:44392/Maintenance/ClearAllDatabases";
 
-        private string loadData = @"https://localhost:44392/Maintenance/LoadAllData";
+        private const string LoadData = @"https://localhost:44392/Maintenance/LoadAllData";
+
+        private const string ReverseJson = @"https://localhost:44392/Maintenance/ReverseJson";
 
         private string HtmlStartup => $@"<!doctype html><html><head>
         <title>Siemens utilities</title>
     </head>
     <body>
         <ul>
-            <li><a href=""{clearData}"">Clear all data.</a></li>
-            <li><a href=""{loadData}"">Load all the data.</a></li>
+            <li><a href=""{ClearData}"">Clear all data.</a></li>
+            <li><a href=""{LoadData}"">Load all the data.</a></li>
+            <li><a href=""{ReverseJson}"">Reverse json.</a></li>
         </ul>
     </body>
 </html>
@@ -62,6 +71,21 @@ namespace EdApp.AutoFill.Web.Controllers
         {
             _loadAllDataService.LoadAll();
             return Ok("All data updated successfully.");
+        }
+
+        [HttpGet("ReverseJson")]
+        public ActionResult<string> GetReverseJsonModel()
+        {
+            var json = _reverseTransformationService.TransformReversely(GetFileInfo("175724AA_WE_round_config_2_mode_3.json"), DynamicTorque);
+            return Ok(json);
+        }
+
+        private FileInfo GetFileInfo(string fileName)
+        {
+            var solutionPath = Path.GetFullPath(Path.Combine(AppHelpers.ProjectPath, @"..\..\.."));
+            const string backSlash = "\\";
+            var folder = string.Concat(solutionPath, backSlash, "tests\\EdApp.AutoFill.UnitTests\\Resources");
+            return new FileInfo(Path.Combine(folder, fileName));
         }
     }
 }
