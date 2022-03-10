@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using EdApp.AutoFill.BL.Contract;
 using EdApp.AutoFill.DAL.Contract;
 
@@ -8,7 +9,18 @@ namespace EdApp.AutoFill.BL.Model
     {
         protected override bool Equals(AttributeDto other)
         {
-            return CalculationTypeId == other.CalculationTypeId && AttributeDtosForSimocalcId == other.AttributeDtosForSimocalcId && Name == other.Name && Value == other.Value && Unit == other.Unit && Description == other.Description;
+            return IsEqual(Name, other.Name) && IsEqual(Value, other.Value) && IsEqual(Unit,  other.Unit);
+        }
+
+        private bool IsEqual(string one, string other)
+        {
+            if (one == null && other == null) return true;
+            if (string.IsNullOrEmpty(one) && string.IsNullOrEmpty(other))
+            {
+                return true;
+            }
+
+            return one.Equals(other, StringComparison.OrdinalIgnoreCase);
         }
 
         public override int GetHashCode()
@@ -37,7 +49,7 @@ namespace EdApp.AutoFill.BL.Model
         {
         }
 
-        public int CalculationTypeId { get; set; }
+    public int CalculationTypeId { get; set; }
 
         public CalculationTypeDto CalculationType { get; set; }
 

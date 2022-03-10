@@ -12,7 +12,9 @@ namespace EdApp.AutoFill.BL.Service;
 public class ReverseTransformationService : IReverseTransformationService
 {
     private const string BaseCalculation = "BaseCalculation";
+    private const string WindingDesignFlatWire = "WindingDesignFlatWireCalculation";
     private const string WindingDesignRoundWire = "WindingDesignRoundWireCalculation";
+    private const string DynamicTorque = "DynamicTorque";
     private readonly IDeserializer _deserializer;
     private readonly IParameterService _parameterService;
 
@@ -22,7 +24,7 @@ public class ReverseTransformationService : IReverseTransformationService
         _deserializer = deserializer;
     }
 
-    public string TransformReversely(FileInfo fileInfo, string calculationType)
+    public string TransformReversely(FileInfo fileInfo, string specificCalculation)
     {
         var attributeDtos = _deserializer.DeserializeTo<MappingDtoCollection>(fileInfo).attributes;
         var parameterDtos = _parameterService.GetAllParameters(null, null, "CalculationType").ToList();
@@ -32,7 +34,6 @@ public class ReverseTransformationService : IReverseTransformationService
         var dotNotationDictionary = new Dictionary<string, string>();
         const string upperContained = "_upper_";
         const string lowerContained = "_lower_";
-        HandleConductorsNo(attributeDtos, upperContained, lowerContained, dotNotationDictionary);
         HandleFillerHeight(attributeDtos, dotNotationDictionary);
         const string fillerHeightCopf = "BGW.FUELLSTREIFENKOPF";
         const string fillerHeightMitte = "BGW.FUELLSTREIFENMITTE";
@@ -51,39 +52,44 @@ public class ReverseTransformationService : IReverseTransformationService
                 uniqueAttributeDto.Name.Trim().Equals(bgStartingWinding1StandardCommentPartTow,
                     StringComparison.OrdinalIgnoreCase)) continue;
 
-            if (DoesNotExistAnyWhere(parameterDtos, uniqueAttributeDto))
+            if (DoesNotExistAnyWhere(parameterDtos, uniqueAttributeDto, specificCalculation))
             {
                 notFoundAttributesInParameters.Add(uniqueAttributeDto.Clone());
                 continue;
             }
 
-            if (HasOnlyBaseCalculationParameters(parameterDtos, uniqueAttributeDto))
+            if (HasOnlyBaseCalculationParameters(parameterDtos, uniqueAttributeDto, specificCalculation))
             {
-                var parameterDto = GetBaseParameterByName(parameterDtos, uniqueAttributeDto);
-                if (string.IsNullOrEmpty(parameterDto.ParentEntity) &&
-                    string.IsNullOrEmpty(parameterDto.Field)) continue;
-                var (key, value) = GenerateDotNotationElementForBaseCalculation(parameterDto, uniqueAttributeDto);
-                dotNotationDictionary.Add(key, value);
+                var parametersDto = GetBaseParameterByName(parameterDtos, uniqueAttributeDto);
+                foreach (var parameterDto in parametersDto)
+                {
+                    if (string.IsNullOrEmpty(parameterDto.ParentEntity) &&
+                        string.IsNullOrEmpty(parameterDto.Field)) continue;
+                    var (key, value) = GenerateDotNotationElementForBaseCalculation(parameterDto, uniqueAttributeDto);
+                    dotNotationDictionary.Add(key, value);
+                }
+                
                 continue;
             }
 
-            if (HasOnlyRoundWireCalculationParameters(parameterDtos, uniqueAttributeDto))
+            if (HasOnlyRoundWireCalculationParameters(parameterDtos, uniqueAttributeDto, specificCalculation))
             {
-                var parameterDto = GetRoundWireParameterByName(parameterDtos, uniqueAttributeDto);
+                var parameterDto = GetRoundWireParameterByName(parameterDtos, uniqueAttributeDto, specificCalculation);
                 var (key, value) = GenerateDotNotationElementForSpecificCalculation(parameterDto, uniqueAttributeDto);
                 dotNotationDictionary.Add(key, value);
                 continue;
             }
 
-            if (!HasBothBaseAndRoundWireCalculationsParameters(parameterDtos, uniqueAttributeDto)) continue;
+            if (!HasBothBaseAndRoundWireCalculationsParameters(parameterDtos, uniqueAttributeDto, specificCalculation)) continue;
             {
-                var parameterDto = GetRoundWireParameterByName(parameterDtos, uniqueAttributeDto);
+                var parameterDto = GetRoundWireParameterByName(parameterDtos, uniqueAttributeDto, specificCalculation);
                 var bothParametersAndAttributes =
                     GenerateDotNotationElementBothForBaseAndSpecificCalculation(parameterDto, uniqueAttributeDto);
                 foreach (var (key, value) in bothParametersAndAttributes) dotNotationDictionary.Add(key, value);
             }
         }
 
+        HandleConductorsNo(attributeDtos, upperContained, lowerContained, dotNotationDictionary);
         var notMappedAttributeDtos = string.Empty;
         if (!notFoundAttributesInParameters.Any())
             return ConvertDotNotationToJson(dotNotationDictionary) + notMappedAttributeDtos;
@@ -91,7 +97,7 @@ public class ReverseTransformationService : IReverseTransformationService
         const string decorativeLine =
             "---------------------------------------------------------------------------------------------";
         var severalNewLines = newLine + newLine + newLine;
-        notMappedAttributeDtos = severalNewLines + decorativeLine +
+        notMappedAttributeDtos = severalNewLines + decorativeLine + newLine +
                                  "Attention: Followed below attributes are not mapped:" +
                                  Environment.NewLine;
         notMappedAttributeDtos = notFoundAttributesInParameters.Aggregate(notMappedAttributeDtos,
@@ -105,7 +111,7 @@ public class ReverseTransformationService : IReverseTransformationService
     {
         const string bgStartingWinding1StandardCommentPartOne = "BGW.BEMERKUNG1";
         const string bgStartingWinding1StandardCommentPartTwo = "BGW.BEMERKUNG2";
-        const string dotNotationPath = "Tra.BgStatorWinding1.StandardComments";
+        const string dotNotationPath = $"{BaseCalculation}.Tra.BgStatorWinding1.StandardComments";
         const string nullValue = "null";
         var value = nullValue;
         var firstPartCommentValue =
@@ -158,7 +164,7 @@ public class ReverseTransformationService : IReverseTransformationService
         var fillerHeightMitteValue = attributeDtos.GetAttributeDto(fillerHeightMitte).Value;
         const string w41Entrance = "W41";
         const string w43Entrance = "W43";
-        const string dotNotationString = "Tra.BgStatorWinding1.FillerHeight";
+        const string dotNotationString = $"{BaseCalculation}.Tra.BgStatorWinding1.FillerHeight";
         var value = "0";
         if (firstCommentPart.Contains(w41Entrance, StringComparison.OrdinalIgnoreCase) ||
             secondCommentPart.Contains(w41Entrance, StringComparison.OrdinalIgnoreCase)) value = fillerHeightCopfValue;
@@ -184,37 +190,50 @@ public class ReverseTransformationService : IReverseTransformationService
     }
 
     private bool HasBothBaseAndRoundWireCalculationsParameters(List<ParameterDto> parameterDtos,
-        AttributeDto uniqueAttributeDto)
+        AttributeDto uniqueAttributeDto, string specificCalculation)
     {
         return HasBaseParameterWithName(parameterDtos, uniqueAttributeDto) &&
-               HasRoundWireParameterWithName(parameterDtos, uniqueAttributeDto);
+               HasRoundWireParameterWithName(parameterDtos, uniqueAttributeDto, specificCalculation);
     }
 
     private bool HasOnlyRoundWireCalculationParameters(List<ParameterDto> parameterDtos,
-        AttributeDto uniqueAttributeDto)
+        AttributeDto uniqueAttributeDto, string specificCalculation)
     {
         return !HasBaseParameterWithName(parameterDtos, uniqueAttributeDto) &&
-               HasRoundWireParameterWithName(parameterDtos, uniqueAttributeDto);
+               HasRoundWireParameterWithName(parameterDtos, uniqueAttributeDto, specificCalculation);
     }
 
-    private bool HasOnlyBaseCalculationParameters(List<ParameterDto> parameterDtos, AttributeDto uniqueAttributeDto)
+    private bool HasOnlyBaseCalculationParameters(List<ParameterDto> parameterDtos, AttributeDto uniqueAttributeDto, string specificCalculation)
     {
         return HasBaseParameterWithName(parameterDtos, uniqueAttributeDto) &&
-               !HasRoundWireParameterWithName(parameterDtos, uniqueAttributeDto);
+               !HasRoundWireParameterWithName(parameterDtos, uniqueAttributeDto, specificCalculation);
     }
 
-    private bool DoesNotExistAnyWhere(List<ParameterDto> parameterDtos, AttributeDto uniqueAttributeDto)
+    private bool DoesNotExistAnyWhere(List<ParameterDto> parameterDtos, AttributeDto uniqueAttributeDto, string specificCalculation)
     {
         return !HasBaseParameterWithName(parameterDtos, uniqueAttributeDto) &&
-               !HasRoundWireParameterWithName(parameterDtos, uniqueAttributeDto);
+               !HasRoundWireParameterWithName(parameterDtos, uniqueAttributeDto, specificCalculation);
     }
 
-    private bool HasRoundWireParameterWithName(IEnumerable<ParameterDto> parameterDtos, AttributeDto attributeDto)
+    private bool HasRoundWireParameterWithName(IEnumerable<ParameterDto> parameterDtos, AttributeDto attributeDto, string specificCalculation)
     {
-        var hasRoundWireParameterWithName = parameterDtos.Where(p =>
-                p.CalculationType.Name.Equals(WindingDesignRoundWire, StringComparison.OrdinalIgnoreCase))
-            .Any(p => p.DesignWireRoundRequest.Trim().Equals(attributeDto.Name.Trim()));
-        return hasRoundWireParameterWithName;
+        if (specificCalculation.Equals(DynamicTorque, StringComparison.OrdinalIgnoreCase))
+        {
+            var hasRoundWireParameterWithName = parameterDtos.Where(p =>
+                    p.CalculationType.Name.Equals(specificCalculation, StringComparison.OrdinalIgnoreCase))
+                .Any(p => p.TorqueRequest.Trim().Equals(attributeDto.Name.Trim()));
+            return hasRoundWireParameterWithName;
+        }
+
+        if (!specificCalculation.Equals(WindingDesignRoundWire, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException();
+        {
+            var hasRoundWireParameterWithName = parameterDtos.Where(p =>
+                    p.CalculationType.Name.Equals(specificCalculation, StringComparison.OrdinalIgnoreCase))
+                .Any(p => p.DesignWireRoundRequest.Trim().Equals(attributeDto.Name.Trim()));
+            return hasRoundWireParameterWithName;
+        }
+
     }
 
     private bool HasBaseParameterWithName(IEnumerable<ParameterDto> parameterDtos, AttributeDto attributeDto)
@@ -226,21 +245,39 @@ public class ReverseTransformationService : IReverseTransformationService
         return hasBaseParameterWithName;
     }
 
-    private ParameterDto GetBaseParameterByName(IEnumerable<ParameterDto> parameterDtos, AttributeDto attributeDto)
+    private IEnumerable<ParameterDto> GetBaseParameterByName(IEnumerable<ParameterDto> parameterDtos, AttributeDto attributeDto)
     {
-        var baseCalculationParameter = parameterDtos.Where(p =>
-            p.CalculationType.Name.Equals(BaseCalculation, StringComparison.OrdinalIgnoreCase)).First(p =>
+        var baseCalculationParameters = parameterDtos.Where(p =>
+            p.CalculationType.Name.Equals(BaseCalculation, StringComparison.OrdinalIgnoreCase)).Where(p =>
             p.ParametersForAllCalculationModules.Trim()
                 .Equals(attributeDto.Name.Trim(), StringComparison.OrdinalIgnoreCase));
-        return baseCalculationParameter;
+        var baseParameterByName = baseCalculationParameters as ParameterDto[] ?? baseCalculationParameters.ToArray();
+        if (baseParameterByName.GroupBy(bcp => bcp.Name).Any(bcp => bcp.Count() > 1))
+        {
+            return new List<ParameterDto> {baseParameterByName.First()};
+        }
+        return baseParameterByName;
     }
 
-    private ParameterDto GetRoundWireParameterByName(IEnumerable<ParameterDto> parameterDtos, AttributeDto attributeDto)
+    private ParameterDto GetRoundWireParameterByName(IEnumerable<ParameterDto> parameterDtos, AttributeDto attributeDto, string specificCalculation)
     {
-        var baseCalculationParameter = parameterDtos.Where(p =>
-            p.CalculationType.Name.Equals(WindingDesignRoundWire, StringComparison.OrdinalIgnoreCase)).First(p =>
-            p.DesignWireRoundRequest.Trim().Equals(attributeDto.Name.Trim(), StringComparison.OrdinalIgnoreCase));
-        return baseCalculationParameter;
+        if (specificCalculation.Equals(DynamicTorque, StringComparison.OrdinalIgnoreCase))
+        {
+            var baseCalculationParameter = parameterDtos.Where(p =>
+                p.CalculationType.Name.Equals(specificCalculation, StringComparison.OrdinalIgnoreCase)).First(p =>
+                p.TorqueRequest.Trim().Equals(attributeDto.Name.Trim(), StringComparison.OrdinalIgnoreCase));
+            return baseCalculationParameter;
+        }
+
+        if (!specificCalculation.Equals(WindingDesignRoundWire, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException();
+        {
+            var baseCalculationParameter = parameterDtos.Where(p =>
+                p.CalculationType.Name.Equals(specificCalculation, StringComparison.OrdinalIgnoreCase)).First(p =>
+                p.DesignWireRoundRequest.Trim().Equals(attributeDto.Name.Trim(), StringComparison.OrdinalIgnoreCase));
+            return baseCalculationParameter;
+        }
+
     }
 
     private IEnumerable<KeyValuePair<string, string>> GenerateDotNotationElementBothForBaseAndSpecificCalculation(
@@ -259,7 +296,7 @@ public class ReverseTransformationService : IReverseTransformationService
 
         var dotNotationForBaseAndSpecificCalculation = new List<KeyValuePair<string, string>>
         {
-            KeyValuePair.Create($"{parameterDto.ParentEntity}.{parameterDto.Field}",
+            KeyValuePair.Create($"{BaseCalculation}.{parameterDto.ParentEntity}.{parameterDto.Field}",
                 ConvertToNullStringIfNullOrEmpty(value)),
             KeyValuePair.Create($"{parameterDto.Field}", ConvertToNullStringIfNullOrEmpty(value))
         };
@@ -295,7 +332,7 @@ public class ReverseTransformationService : IReverseTransformationService
                 _ => value
             };
 
-        return KeyValuePair.Create($"{parameterDto.ParentEntity}.{parameterDto.Field}",
+        return KeyValuePair.Create($"{BaseCalculation}.{parameterDto.ParentEntity}.{parameterDto.Field}",
             ConvertToNullStringIfNullOrEmpty(value));
     }
 

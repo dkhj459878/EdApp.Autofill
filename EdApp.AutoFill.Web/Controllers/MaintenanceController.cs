@@ -11,6 +11,7 @@ namespace EdApp.AutoFill.Web.Controllers
     public class MaintenanceController : ControllerBase
     {
         private const string DynamicTorque = "DynamicTorque";
+        private const string WindingDesignRoundWire = "WindingDesignRoundWire";
 
         private readonly ILogger<MaintenanceController> _logger;
         private readonly ICalculationTypeService _calculationTypeService;
@@ -40,9 +41,9 @@ namespace EdApp.AutoFill.Web.Controllers
     </head>
     <body>
         <ul>
-            <li><a href=""{ClearData}"">Clear all data.</a></li>
-            <li><a href=""{LoadData}"">Load all the data.</a></li>
-            <li><a href=""{ReverseJson}"">Reverse json.</a></li>
+            <li><a href=""{ClearData}"">Clear all data.</a>Run its first.</li>
+            <li><a href=""{LoadData}"">Load all the data.</a>Load all data. Run it's second.</li>
+            <li><a href=""{ReverseJson}"">Reverse json.</a>Get json file.</li>
         </ul>
     </body>
 </html>
@@ -75,7 +76,7 @@ namespace EdApp.AutoFill.Web.Controllers
         [HttpGet("ReverseJson")]
         public ActionResult<string> GetReverseJsonModel()
         {
-            var json = _reverseTransformationService.TransformReversely(GetFileInfo("175724AA_WE_round_config_2_mode_3.json"), DynamicTorque);
+            var json = _reverseTransformationService.TransformReversely(GetFileInfo("175939_DM.json"), DynamicTorque);
             return Ok(json);
         }
 
