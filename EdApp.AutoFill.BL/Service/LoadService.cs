@@ -61,13 +61,13 @@ public class LoadService : ILoadAllDataService
 
     public void LoadAll()
     {
-        //LoadCalculationTypes();
-        //LoadModelTypes();
-        //SetupEnvironmentParameters();
-        //LoadParameters();
+        LoadCalculationTypes();
+        LoadModelTypes();
+        SetupEnvironmentParameters();
+        LoadParameters();
         //LoadAttributesForSimocalcDto();
         //LoadAttributes();
-        CompareAttributes();
+        // CompareAttributes();
     }
 
     private void CompareAttributes()
